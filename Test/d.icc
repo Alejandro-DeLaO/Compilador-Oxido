@@ -1,6 +1,6 @@
 sea MAX:entero=10;
 sea mut vec[MAX]:entero = [33, 1, -3, 4, 19, 88, 15, 2, 100, 10];
-sea min:entero=10
+sea min:entero=10;
 //afsdaafsdfasd
 fn principal() {
     fasd;

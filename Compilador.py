@@ -62,6 +62,7 @@ class Analizador:
     dim2 = 0
     contador_dimension = 0;
     tab_sim = {}
+    tabla_de_valores = {}
     pl0_program = []
     nombre_del_archivo = ""
     contador_codigo = 1
@@ -70,7 +71,7 @@ class Analizador:
     contador_etiquetas = 0
     imprimir_y_linea = False
 
-    #inicializador de la clase
+    # Inicializador de la clase
     def __init__(self, nombre_del_archivo, input, rows):
         self.nombre_del_archivo = nombre_del_archivo
         self.input = input
@@ -78,6 +79,7 @@ class Analizador:
 
     def insertar_codigo(self, contador_codigo, cPl0):
         self.pl0_program[contador_codigo] = cPl0 
+        self.contador_codigo += 1
 
     def insertar_tabla_simbolos(self, key, colec):
         self.tab_sim[key] = colec
@@ -85,12 +87,18 @@ class Analizador:
     def obtener_simbolo(self, key):
         return self.tab_sim[key]
 
+    def insertar_tabla_de_valores(self, key, value):
+        self.tabla_de_valores[key] = value
+    
+    def obtener_valor(self, key):
+        return self.tabla_de_valores[key]
+
     def print_error_line(self,  error_lex):
         print("\n"+self.rows[self.contador_linea-1],end="")
         print("^".rjust(self.contador_columna))
         print(error_lex.rjust(self.contador_columna))
 
-    #metodo para imprimir errores
+    # Metodo para imprimir errores
     def print_error(self, type, message):
         print("[" + str(self.contador_linea) + "]", "[" + str(self.contador_columna) + "]", type, message)
         sys.exit()
@@ -100,7 +108,7 @@ class Analizador:
 # Metodos del analizador Lexico #
 #################################
 
-    #metodo para decidir la siguiente columna de la matriz de transicion
+    # Metodo para decidir la siguiente columna de la matriz de transicion
     def columna(self, c):
         if c.isalpha():          return 0
         elif c == "_":           return 1
@@ -121,7 +129,7 @@ class Analizador:
             self.print_error("Error Lexico ", str(c) + " No es valido en el alfabeto del lenguaje")
         return self.ERR
 
-    #Inicia el analizador lexico
+    # Inicia el analizador lexico
     def tokeniza(self):
         if self.idx >= len(self.input):
             return '', ''
@@ -284,13 +292,13 @@ class Analizador:
 # Metodos del Analizador Sintactico #
 #####################################
 
-# inicia el analizador sintactico
+# Inicia el analizador sintactico
     def analizador_sintactico(self):
         self.tok, self.lex = self.tokeniza()
         self.global_scope()
         print(self.nombre_del_archivo, 'COMPILO con EXITO!!!')
 
-#bloque global
+# Bloque global
     def global_scope(self):
         while True:
             if self.lex == "sea":
@@ -302,7 +310,7 @@ class Analizador:
             else:
                 self.print_error('Error de Sintaxis', 'Solo se puede definir funciones o declarar valiables en el global scope')
 
-#define las funciones
+# Define las funciones
     def funciones(self):
             self.lex
             self.tok
@@ -339,9 +347,8 @@ class Analizador:
 
                 if nombre_de_funcion == 'principal':
                     self.insertar_codigo(self.contador_codigo, ['OPR', '0', '0'])
-                    self.contador_codigo += 1                  
 
-#define los parametros de la funcion declarada
+# Define los parametros de la funcion declarada
     def definicion_de_parametros(self): 
         sec = ','
         while sec == ',':
@@ -356,7 +363,109 @@ class Analizador:
             if sec == ',':
                 self.tok, self.lex = self.tokeniza()
 
-#declara las variables
+    def declaracion_variables(self):
+        self.dim1 = 0
+        self.dim2 = 0
+        self.contador_dimension = 0
+        tipo_de_dato = 'I'
+        clase_de_variable = ''
+        valor = ''
+        self.tok, self.lex = self.tokeniza();
+        if self.tok == "(":
+            pass
+
+        elif self.lex == "mut":
+            clase_de_variable = 'V'
+            self.tok, self.lex = self.tokeniza()
+        elif self.tok == "Ide":
+            clase_de_variable = 'C'
+        else:
+             self.print_error('Error de Sintaxis', 'Se esperaba mut, IDENTIFICADOR o ( y llego' + self.lex)
+
+        if self.tok == "Ide":
+            nombre_del_indentificador = self.lex 
+            self.tok, self.lex = self.tokeniza()
+        else:
+            self.print_error('Error de Sintaxis', 'Se esperaba IDENTIFICADOR y llego' + self.lex)
+
+        if self.lex == "=":
+            self.insertar_tabla_de_valores(nombre_del_indentificador, valor)
+            self.insertar_tabla_simbolos(nombre_del_indentificador, [clase_de_variable, tipo_de_dato, str(self.dim1), str(self.dim2)])
+            self.tok, self.lex = self.tokeniza()
+            self.asignar_valor(nombre_del_indentificador)
+            return
+
+        if self.lex == "[":
+            self.dimensionar()
+            
+        if self.lex == ":":
+            self.tok, self.lex = self.tokeniza()
+            if self.lex == 'entero' : 
+                tipo_de_dato = 'E'
+                if self.dim1 == 0:
+                    valor = '0'
+            elif self.lex == 'decimal': 
+                tipo_de_dato = 'D'
+                if self.dim1 == 0:
+                    alor = '0.0'
+            elif self.lex == 'logico' : 
+                tipo_de_dato = 'L'
+                if self.dim1 == 0:
+                    valor = 'F'
+            elif self.lex == 'alfabetico': 
+                tipo_de_dato = 'A'
+                if self.dim1 == 0:
+                    valor = '""'
+            else:
+                self.print_error('Error de Sintaxis', 'se esperaba un TIPO DE VALOR y llego '+ self.lex)
+            self.tok, self.lex = self.tokeniza()
+        else:
+            self.print_error('Error de Sintaxis', 'Se esperaba TIPO DE VALOR, ASIGNACION DE VALOR O DIMENSION DE ARREGLO y llego' + self.lex)
+
+        if self.lex == ";":
+            self.insertar_tabla_de_valores(nombre_del_indentificador, valor)
+            self.insertar_tabla_simbolos(nombre_del_indentificador, [clase_de_variable, tipo_de_dato, str(self.dim1), str(self.dim2)])
+
+            
+            self.insertar_codigo(self.contador_codigo, ['LIT', valor, '0'])
+            self.insertar_codigo(self.contador_codigo, ['STO', '0', nombre_del_indentificador])
+            return
+
+        if self.lex == "=":
+            self.insertar_tabla_de_valores(nombre_del_indentificador, valor)
+            self.insertar_tabla_simbolos(nombre_del_indentificador, [clase_de_variable, tipo_de_dato, str(self.dim1), str(self.dim2)])
+            self.tok, self.lex = self.tokeniza()
+            self.asignar_valor(nombre_del_indentificador)
+            return
+        self.print_error('Error de Sintaxis', 'Se esperaba ASIGNACION DE VALOR O ; y llego' + self.lex)
+
+
+    def asignar_valor(self, nombre_del_identificador):
+        #checar si el tipo es indefinido para inferir el tipo de valor
+        if self.obtener_simbolo(nombre_del_identificador)[1] == "I":
+            if self.tok == "Ent":
+                tipo_de_dato = 'L'
+                valor = 'F'
+            elif self.tok == "Dec":
+                tipo_de_dato = 'D'
+                valor = '0.0'
+            elif self.tok == "CtL":
+                tipo_de_dato = 'L'
+                valor = 'F'
+            elif self.tok == "CtA":
+                tipo_de_dato = 'A'
+                valor = '""'
+            else:
+                self.print_error('Error de Sintaxis', 'se esperaba un Valor y llego '+ self.lex)
+
+
+        #checar si es un arreglo
+
+        #resolver la expresion y asignar
+
+
+
+# Declara las variables
     def variables(self):
         self.dim1 = 0
         self.dim2 = 0
@@ -385,8 +494,8 @@ class Analizador:
             if self.lex == "=":
                 self.tok, self.lex = self.tokeniza()
                 if self.tok == "Ent":
-                    tipo_de_dato = 'L'
-                    valor = 'F'
+                    tipo_de_dato = 'E'
+                    valor = '0'
                 elif self.tok == "Dec":
                     tipo_de_dato = 'D'
                     valor = '0.0'
@@ -403,9 +512,7 @@ class Analizador:
                 if self.lex == ";":
                     for nombre in nombre_variables:
                         self.insertar_codigo(self.contador_codigo, ['LIT', valor, '0'])
-                        self.contador_codigo += 1
                         self.insertar_codigo(self.contador_codigo, ['STO', '0', nombre])
-                        self.contador_codigo += 1
 
                 for nombre in nombre_variables:
                     self.insertar_tabla_simbolos(nombre, [clase_de_variable, tipo_de_dato, str(self.dim1), str(self.dim2)])
@@ -438,9 +545,7 @@ class Analizador:
                 elif self.lex == ";":
                     for nombre in nombre_variables:
                         self.insertar_codigo(self.contador_codigo, ['LIT', valor, '0'])
-                        self.contador_codigo += 1
                         self.insertar_codigo(self.contador_codigo, ['STO', '0', nombre])
-                        self.contador_codigo += 1
 
                 for nombre in nombre_variables:
                     self.insertar_tabla_simbolos(nombre, [clase_de_variable, tipo_de_dato, str(self.dim1), str(self.dim2)])
@@ -456,9 +561,8 @@ class Analizador:
                 self.tok, self.lex = self.tokeniza()
                 if self.lex == 'fn':
                     self.insertar_codigo(self.contador_codigo, ['JMP', '0', '_principal'])
-                    self.contador_codigo += 1
 
-#llama a las funciones
+# Llama a las funciones
     def llamada_funcion(self):
         lexema_anterior = ""
         while True:
@@ -492,8 +596,7 @@ class Analizador:
             elif self.lex == 'verdadero':
                 self.insertar_codigo(self.contador_codigo, ['LIT', 'V', '0'])
             elif self.lex == 'falso':
-             self.insertar_codigo(self.contador_codigo, ['LIT', 'F', '0'])
-            self.contador_codigo +=  1
+                self.insertar_codigo(self.contador_codigo, ['LIT', 'F', '0'])
         if self.tok == 'Ide':
             nombre_identificador = self.lex
 
@@ -513,7 +616,6 @@ class Analizador:
                     break
         if nombre_identificador != "":
             self.insertar_codigo(self.contador_codigo, ['LOD', nombre_identificador, '0'])
-            self.contador_codigo += 1
 
     def operador_menos_unitario(self):
         operador = ""
@@ -525,7 +627,6 @@ class Analizador:
         
         if operador == "-":
             self.insertar_codigo(self.contador_codigo, ["OPR", "0", "8"])
-            self.contador_codigo += 1
 
     def operador_multiplicar(self):
         operador = ""
@@ -538,13 +639,10 @@ class Analizador:
 
             if operador == "*":
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "4"])
-                self.contador_codigo += 1
             elif operador == "/":
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "5"])
-                self.contador_codigo += 1
             elif operador == "%":
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "6"])
-                self.contador_codigo += 1
 
 
             if self.lex not in ["*", "/", "%"]:
@@ -562,10 +660,8 @@ class Analizador:
 
             if operador == "+":
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "2"])
-                self.contador_codigo += 1
             elif operador == "-":
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "3"])
-                self.contador_codigo += 1
 
             if(self.lex == "+" or self.lex == "-"):
                 bin = True
@@ -583,22 +679,16 @@ class Analizador:
 
             if operador == "<":
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "9"])
-                self.contador_codigo += 1
             elif operador == ">":
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "10"])
-                self.contador_codigo += 1
             elif operador == "<=":
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "11"])
-                self.contador_codigo += 1
             elif operador == ">=":
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "12"])
-                self.contador_codigo += 1
             elif operador == "!=":
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "13"])
-                self.contador_codigo += 1
             elif operador == "==":
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "14"])
-                self.contador_codigo += 1
 
     def operador_not(self):
         operador = ""
@@ -609,7 +699,6 @@ class Analizador:
 
         if operador == "!":
             self.insertar_codigo(self.contador_codigo, ["OPR", "0", "17"])
-            self.contador_codigo += 1
 
     def operador_and(self):
         operador = ""
@@ -621,7 +710,6 @@ class Analizador:
 
             if operador == "&&" or operador == "y": 
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "15"])
-                self.contador_codigo += 1
 
             if self.lex != "&&" and self.lex != "y":
                 break
@@ -636,7 +724,6 @@ class Analizador:
             self.operador_and()
             if operador == "||" or operador == "o":
                 self.insertar_codigo(self.contador_codigo, ['OPR', "0", "16"])
-                self.contador_codigo += 1
 
             #esto es para simular el do while
             if self.lex != "||" and self.lex != "o":
@@ -718,7 +805,6 @@ class Analizador:
             self.imprimir_y_linea = False
         elif self.lex == 'lmp': 
             self.insertar_codigo(self.contador_codigo, ['OPR', '0', '18'])
-            self.contador_codigo += 1
             self.tok, self.lex = self.tokeniza()
             if self.lex != ';':
                 self.print_error('Error de Sintaxis', 'se esperaba ; y llego '+ self.lex)
@@ -731,7 +817,6 @@ class Analizador:
         self.tok, self.lex = self.tokeniza()
         if self.lex == ')':
             self.insertar_codigo(self.contador_codigo, ['LIT', '""', '0'])
-            self.contador_codigo += 1
         elif self.lex != ')':
             sep = ','
             while sep == ',':
@@ -741,7 +826,6 @@ class Analizador:
                 if self.lex != ')': self.tok, self.lex = self.tokeniza()
                 if sep == ',':
                     self.insertar_codigo(self.contador_codigo, ['OPR', '0', '20'])
-                    self.contador_codigo += 1           
 
         if self.lex != ')': self.tok, self.lex = self.tokeniza()
         if self.lex != ')':
@@ -751,7 +835,6 @@ class Analizador:
                 self.insertar_codigo(self.contador_codigo, ['OPR', '0', '21'])
             if self.imprimir_y_linea == True:
                 self.insertar_codigo(self.contador_codigo, ['OPR', '0', '20'])
-            self.contador_codigo += 1           
         
         self.tok, self.lex = self.tokeniza()
         if self.lex != ';':
@@ -772,7 +855,6 @@ class Analizador:
                 self.udim(nombre_identificador, 0, 0)
         if self.lex == ')':
             self.insertar_codigo(self.contador_codigo, ['OPR', nombre_identificador, '19'])
-            self.contador_codigo += 1
         else:
             self.print_error('Error de Sintaxis', 'Se esperaba ")" y llego '+ self.lex)
         
@@ -806,7 +888,6 @@ class Analizador:
 
         self.expr()
         self.insertar_codigo(self.contador_codigo, ["STO", "0",  nombre_variable])
-        self.contador_codigo += 1
 
     def dimens(self):
         while True:
@@ -839,14 +920,11 @@ class Analizador:
             else:
                 if profundidad > 0:
                     self.insertar_codigo(self.contador_codigo, ['LIT', str(indice), '0'])
-                    self.contador_codigo += 1
                 self.insertar_codigo(self.contador_codigo, ['LIT', str(contador_indice_arreglo), '0'])
-                self.contador_codigo += 1
                 contador_indice_arreglo += 1
                 self.expr()
                 
                 self.insertar_codigo(self.contador_codigo, ['STO', '0', nombre_identificador])
-                self.contador_codigo += 1
             if self.lex != ",":
                 break
 
@@ -874,7 +952,6 @@ class Analizador:
         numero_de_etiqueta = "_E" + numero_de_etiqueta
         etiqueta_x = numero_de_etiqueta
         self.insertar_codigo(self.contador_codigo, ["JMC", "F", etiqueta_x])
-        self.contador_codigo += 1
 
         if self.lex != "sino":
             self.block()
@@ -885,7 +962,6 @@ class Analizador:
             numero_de_etiqueta = "_E" + numero_de_etiqueta
             etiqueta_y = numero_de_etiqueta
             self.insertar_codigo(self.contador_codigo, ["JMP", "0", etiqueta_y])
-            self.contador_codigo += 1
             self.insertar_tabla_simbolos(etiqueta_x, ['I', 'I', str(self.contador_codigo), 0])
             self.tok, self.lex = self.tokeniza()
             self.block()
@@ -1000,13 +1076,11 @@ class Analizador:
         numero_etiqueta = "_E" + numero_etiqueta
         etiqueta_x = numero_etiqueta
         self.insertar_codigo(self.contador_codigo, ["JMC", "F", etiqueta_x])
-        self.contador_codigo += 1
         numero_etiqueta = str(self.contador_etiquetas)
         self.contador_etiquetas += 1
         numero_etiqueta = "_E" + numero_etiqueta
         etiqueta_y = numero_etiqueta
         self.insertar_codigo(self.contador_codigo, ["JMP", "0", etiqueta_y])
-        self.contador_codigo += 1
         
 
         if self.lex != "{":
@@ -1015,7 +1089,6 @@ class Analizador:
         self.insertar_tabla_simbolos(etiqueta_y, ['I', 'I', str(self.contador_codigo), 0])
         self.block()
         self.insertar_codigo(self.contador_codigo, ["JMP", "0", str(direccion1)])
-        self.contador_codigo += 1
         self.insertar_tabla_simbolos(etiqueta_x, ['I', 'I', str(self.contador_codigo), 0])
    
     def bucle_for_prueba(self):
@@ -1035,13 +1108,11 @@ class Analizador:
             numero_etiqueta = "_E" + numero_etiqueta
             etiqueta_x = numero_etiqueta
             self.insertar_codigo(self.contador_codigo, ["JMC", "F", etiqueta_x])
-            self.contador_codigo += 1
             numero_etiqueta = str(self.contador_etiquetas)
             self.contador_etiquetas += 1
             numero_etiqueta = "_E" + numero_etiqueta
             etiqueta_y = numero_etiqueta
             self.insertar_codigo(self.contador_codigo, ["JMP", "0", etiqueta_y])
-            self.contador_codigo += 1
         
         if self.lex != ";" :
             self.print_error('Error de Sintaxis', 'Se esperaba ; y llego '+ self.lex)
@@ -1052,12 +1123,10 @@ class Analizador:
             direccion2 = self.contador_codigo
             self.estatutos()
             self.insertar_codigo(self.contador_codigo, ["JMP", "0", str(direccion1)])
-            self.contador_codigo += 1
         
         self.insertar_tabla_simbolos(etiqueta_y, ['I', 'I', str(self.contador_codigo), 0])
         self.block()
         self.insertar_codigo(self.contador_codigo, ["JMP", "0", str(direccion2)])
-        self.contador_codigo += 1
         self.insertar_tabla_simbolos(etiqueta_x, ['I', 'I', str(self.contador_codigo), 0])
 
     def regresa(self):

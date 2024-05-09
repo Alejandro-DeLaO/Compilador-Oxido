@@ -1,0 +1,44 @@
+MAX,C,E,0,0,#,
+vec,V,E,0,0,#,
+min,C,E,0,0,#,
+_principal,F,I,38,0,#,
+_P,I,I,1,0,#,
+@
+1 LIT 10, 0
+2 STO 0, MAX
+3 LOD MAX, 0
+4 LIT 0, 0
+5 LIT 33, 0
+6 STO 0, vec
+7 LIT 1, 0
+8 LIT 1, 0
+9 STO 0, vec
+10 LIT 2, 0
+11 LIT 3, 0
+12 OPR 0, 8
+13 STO 0, vec
+14 LIT 3, 0
+15 LIT 4, 0
+16 STO 0, vec
+17 LIT 4, 0
+18 LIT 19, 0
+19 STO 0, vec
+20 LIT 5, 0
+21 LIT 88, 0
+22 STO 0, vec
+23 LIT 6, 0
+24 LIT 15, 0
+25 STO 0, vec
+26 LIT 7, 0
+27 LIT 2, 0
+28 STO 0, vec
+29 LIT 8, 0
+30 LIT 100, 0
+31 STO 0, vec
+32 LIT 9, 0
+33 LIT 10, 0
+34 STO 0, vec
+35 LIT 10, 0
+36 STO 0, min
+37 JMP 0, _principal
+38 OPR 0, 0
