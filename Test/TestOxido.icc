@@ -1,0 +1,47 @@
+sea MAX:entero=10;
+sea mut vec[MAX]:entero = [33, 1, -3, 4, 19, 88, 15, 2, 100, 10];
+sea mut i, j, k, facto, num, tmp: entero;
+sea mut fibo, fiba: entero;
+sea mut bPrimo = verdadero;
+sea mut nom:alfabetico;
+
+fn principal() {
+   imprimeln!(vec[5]);
+   //Fin de Ordena
+   //Fibonacci
+   tmp = 0;
+   fiba = 0;
+   fibo = 1;
+   imprimeln!("Dame num: ");
+   leer(num);
+   mientras num >= 1 {
+      tmp = fibo;
+      fibo = fiba + fibo;
+      fiba = tmp;
+      num = num - 1;
+   }
+   imprimeln!("Fibonacci(", num, ")=", fibo);
+   //Checa primo
+   imprimeln("Dame num: ");
+   leer(num);
+   i = 2;
+   ciclo {
+      si num % i == 0 {
+         bPrimo = falso;
+      }
+      i = i + 1;
+   } mientras i < num;
+   imprimeln(num);
+   si bPrimo {
+      imprimeln!(" es PRIMO");
+   }
+   sino {
+      imprimeln!(" NO es PRIMO");
+   }
+   imprimeln("Como te llamas ? ");
+   leer(nom);
+   imprimeln!("Felicidades ", nom, " ya PASASTE Compiladoes");
+}
+
+
+
