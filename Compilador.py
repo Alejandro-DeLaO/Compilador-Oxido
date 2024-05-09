@@ -93,8 +93,12 @@ class Analizador:
     #metodo para imprimir errores
     def print_error(self, type, message):
         print("[" + str(self.contador_linea) + "]", "[" + str(self.contador_columna) + "]", type, message)
-        self.print_error_line(";")
         sys.exit()
+
+
+#################################
+# Metodos del analizador Lexico #
+#################################
 
     #metodo para decidir la siguiente columna de la matriz de transicion
     def columna(self, c):
@@ -117,20 +121,7 @@ class Analizador:
             self.print_error("Error Lexico ", str(c) + " No es valido en el alfabeto del lenguaje")
         return self.ERR
 
-    #Inicia el programa
-    def init_program(self):
-        for i in range(0, 10000):
-            self.pl0_program.append([])
-    
-    def analizador_sintactico(self):
-        self.tok, self.lex = self.tokeniza()
-        while True:
-            self.variables()
-            self.funciones()
-            if self.idx >= len(self.input):
-                break
-        print(self.nombre_del_archivo, 'COMPILO con EXITO!!!')
-
+    #Inicia el analizador lexico
     def tokeniza(self):
         if self.idx >= len(self.input):
             return '', ''
@@ -288,420 +279,84 @@ class Analizador:
             token, lexema = analizador.tokeniza()
             print(token, lexema)
 
-    def construir_archivo_PL0(self):
-        self.idx = 0
-        if len(self.input) > 0:
-            self.init_program()
-            self.analizador_sintactico()
-            nombre_archivo_salida = self.nombre_del_archivo[0:len(self.nombre_del_archivo)-3] + 'eje'
-            try:
-                with open(str(pathlib.Path(__file__).parent.resolve()) + "/" + nombre_archivo_salida, 'w') as archivo_de_salida:
-                    for x, y in self.tab_sim.items():
-                        archivo_de_salida.write(x + ',')
-                        archivo_de_salida.write(y[0]+',')
-                        archivo_de_salida.write(y[1]+',')
-                        archivo_de_salida.write(str(y[2])+',')
-                        archivo_de_salida.write(str(y[3])+',')
-                        archivo_de_salida.write('#,\n')
-                    archivo_de_salida.write('@\n')
-                    for i in range(1, self.contador_codigo):
-                        archivo_de_salida.write(str(i) + ' ')
-                        archivo_de_salida.write(self.pl0_program[i][0] + ' ')
-                        archivo_de_salida.write(self.pl0_program[i][1] + ', ')
-                        archivo_de_salida.write(self.pl0_program[i][2]  + '\n')
-                archivo_de_salida.close()
-            except FileNotFoundError:
-                print(self.nombre_del_archivo, 'No exite volver a intentar')
 
-    def llamada_funcion(self):
-        lexema_anterior = ""
+#####################################
+# Metodos del Analizador Sintactico #
+#####################################
+
+# inicia el analizador sintactico
+    def analizador_sintactico(self):
+        self.tok, self.lex = self.tokeniza()
+        self.global_scope()
+        print(self.nombre_del_archivo, 'COMPILO con EXITO!!!')
+
+#bloque global
+    def global_scope(self):
         while True:
-            lexema_anterior = self.lex
-            self.tok, self.lex = self.tokeniza()
-            if self.lex == ")" and lexema_anterior == "(":
+            if self.lex == "sea":
+                self.variables()
+            elif self.lex == "fn":
+                self.funciones()
+            elif self.idx >= len(self.input):
                 break
-            if self.lex == "," and (lexema_anterior == "," or lexema_anterior == "("):
-                self.print_error('Error de Sintaxis', 'Se esperaba PARAMETRO y llego '+ self.lex)
-                break
-            self.expr()
-            if self.lex != ",":
-                break
-        if self.lex != ")":
-            self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex)
-        self.tok, self.lex = self.tokeniza()
-
-    def termino(self):
-        nombre_identificador = ""
-        is_function = False
-        if self.lex == '(':
-            self.tok, self.lex = self.tokeniza()
-            self.expr()
-            if self.lex != ')':
-                self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex)
-        if self.tok in ['Ent', 'Dec', 'CtA', 'CtL']:
-            if self.tok in ['Ent', 'Dec', 'CtA']:
-                self.insertar_codigo(self.contador_codigo, ['LIT', self.lex, '0'])
-            elif self.lex == 'verdadero':
-                self.insertar_codigo(self.contador_codigo, ['LIT', 'V', '0'])
-            elif self.lex == 'falso':
-             self.insertar_codigo(self.contador_codigo, ['LIT', 'F', '0'])
-            self.contador_codigo +=  1
-        if self.tok == 'Ide':
-            nombre_identificador = self.lex
-
-
-        self.tok, self.lex = self.tokeniza()
-
-        if self.lex == "(" and nombre_identificador != "":
-            self.llamada_funcion()
-
-        if self.lex == "[" and  nombre_identificador != "" and not is_function:
-            while True:
-                self.tok, self.lex = self.tokeniza()
-                self.expr()
-                if self.lex != "]": self.print_error('Error de Sintaxis', 'Se esperaba ] y llego '+ self.lex)
-                self.tok, self.lex = self.tokeniza()
-                if self.lex != "[":
-                    break
-        if nombre_identificador != "":
-            self.insertar_codigo(self.contador_codigo, ['LOD', nombre_identificador, '0'])
-            self.contador_codigo += 1
-
-    def operador_menos_unitario(self):
-        operador = ""
-        if self.lex == "-":
-            operador = self.lex
-            self.tok, self.lex = self.tokeniza()
-        
-        self.termino()
-        
-        if operador == "-":
-            self.insertar_codigo(self.contador_codigo, ["OPR", "0", "8"])
-            self.contador_codigo += 1
-
-
-    def operador_multiplicar(self):
-        operador = ""
-        while True:
-            if self.lex in ["*", "/", "%"]:
-                operador = self.lex
-                self.tok, self.lex = self.tokeniza()
-
-            self.operador_menos_unitario()
-
-            if operador == "*":
-                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "4"])
-                self.contador_codigo += 1
-            elif operador == "/":
-                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "5"])
-                self.contador_codigo += 1
-            elif operador == "%":
-                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "6"])
-                self.contador_codigo += 1
-
-
-            if self.lex not in ["*", "/", "%"]:
-                break
-
-
-    def operador_suma(self):
-        operador = ""
-        bin = False
-
-        while True:
-            if (self.lex == "+" or self.lex == "-") and bin:
-                operador = self.lex
-                self.tok, self.lex = self.tokeniza()
-            self.operador_multiplicar()
-
-            if operador == "+":
-                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "2"])
-                self.contador_codigo += 1
-            elif operador == "-":
-                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "3"])
-                self.contador_codigo += 1
-
-            if(self.lex == "+" or self.lex == "-"):
-                bin = True
-
-            if (self.lex != "+" and self.lex != "-"):
-                break
-
-    def operador_relacional(self):
-        operador = ""
-        self.operador_suma()
-        if self.lex in ["<", ">", "<=", ">=", "!=", "=="]:
-            operador = self.lex
-            self.tok, self.lex = self.tokeniza()
-            self.operador_suma()
-
-            if operador == "<":
-                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "9"])
-                self.contador_codigo += 1
-            elif operador == ">":
-                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "10"])
-                self.contador_codigo += 1
-            elif operador == "<=":
-                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "11"])
-                self.contador_codigo += 1
-            elif operador == ">=":
-                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "12"])
-                self.contador_codigo += 1
-            elif operador == "!=":
-                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "13"])
-                self.contador_codigo += 1
-            elif operador == "==":
-                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "14"])
-                self.contador_codigo += 1
-
-    def operador_not(self):
-        operador = ""
-        if self.lex == "!":
-            operador = self.lex
-            self.tok, self.lex = self.tokeniza()
-        self.operador_relacional()
-
-        if operador == "!":
-            self.insertar_codigo(self.contador_codigo, ["OPR", "0", "17"])
-            self.contador_codigo += 1
-
-    def operador_and(self):
-        operador = ""
-        while True:
-            if self.lex == "&&" or self.lex == "y":
-                operador = self.lex
-                self.tok, self.lex = self.tokeniza()
-            self.operador_not()
-
-            if operador == "&&" or operador == "y": 
-                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "15"])
-                self.contador_codigo += 1
-
-            if self.lex != "&&" and self.lex != "y":
-                break
-
-
-    def expr(self):
-        operador = ""
-        while True:
-            
-            if self.lex == "||" or self.lex == "o":
-                operador = self.lex
-                self.tok, self.lex = self.tokeniza()
-            self.operador_and()
-            if operador == "||" or operador == "o":
-                self.insertar_codigo(self.contador_codigo, ['OPR', "0", "16"])
-                self.contador_codigo += 1
-
-            #esto es para simular el do while
-            if self.lex != "||" and self.lex != "o":
-                break
-
-    def imprimenl(self):
-        self.tok, self.lex = self.tokeniza()
-        if self.lex != '(':
-            self.print_error('Error de Sintaxis', 'Se esperaba ( y llego '+ self.lex)
-        self.tok, self.lex = self.tokeniza()
-        if self.lex == ')':
-            self.insertar_codigo(self.contador_codigo, ['LIT', '""', '0'])
-            self.contador_codigo += 1
-        elif self.lex != ')':
-            sep = ','
-            while sep == ',':
-                sep = ''
-                self.expr() 
-                sep = self.lex
-                if self.lex != ')': self.tok, self.lex = self.tokeniza()
-                if sep == ',':
-                    self.insertar_codigo(self.contador_codigo, ['OPR', '0', '20'])
-                    self.contador_codigo += 1           
-
-        if self.lex != ')': self.tok, self.lex = self.tokeniza()
-        if self.lex != ')':
-            self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex)
-        else:
-            if self.imprimir_y_linea == False:
-                self.insertar_codigo(self.contador_codigo, ['OPR', '0', '21'])
-            if self.imprimir_y_linea == True:
-                self.insertar_codigo(self.contador_codigo, ['OPR', '0', '20'])
-            self.contador_codigo += 1           
-        
-        self.tok, self.lex = self.tokeniza()
-        if self.lex != ';':
-            self.print_error('Error de Sintaxis', 'se esperaba ; y llego '+ self.lex)
-
-    def leer(self):  #Comando leer Oxido
-        self.tok, self.lex = self.tokeniza()
-        nombre_identificador = ''
-        if self.lex != '(':
-            self.print_error('Error de Sintaxis', 'Se esperaba ( y llego '+ self.lex)
-        self.tok, self.lex = self.tokeniza()
-        if self.tok != 'Ide':
-            self.print_error('Error de Sintaxis', 'Se esperaba Identificador y llego '+ self.lex)
-        else:
-            nombre_identificador = self.lex
-            self.tok, self.lex = self.tokeniza()
-            if self.lex == '[':
-                self.udim(nombre_identificador, 0, 0)
-        if self.lex == ')':
-            self.insertar_codigo(self.contador_codigo, ['OPR', nombre_identificador, '19'])
-            self.contador_codigo += 1
-        else:
-            self.print_error('Error de Sintaxis', 'Se esperaba ")" y llego '+ self.lex)
-        
-        self.tok, self.lex = self.tokeniza()
-        if self.lex != ';':
-            self.print_error('Error de Sintaxis', 'se esperaba ; y llego '+ self.lex)
-
-
-    def comando(self): 
-        if self.lex == 'imprimeln!': self.imprimenl()
-        elif self.lex == 'imprimeln': 
-            self.imprimir_y_linea = True
-            self.imprimenl();
-            self.imprimir_y_linea = False
-        elif self.lex == 'lmp': 
-            self.insertar_codigo(self.contador_codigo, ['OPR', '0', '18'])
-            self.contador_codigo += 1
-            self.tok, self.lex = self.tokeniza()
-            if self.lex != ';':
-                self.print_error('Error de Sintaxis', 'se esperaba ; y llego '+ self.lex)
-        elif self.lex == 'leer': self.leer()
-
-    def asigna(self, nombre_variable):
-        if self.lex != "=" and self.lex != "[" and self.tok not in ["Ent", "Dec","CtL", "CtA"]:
-            self.print_error('Error de Sintaxis', 'se esperaba = o POSICION EN ARREGLO y llego '+ self.lex)
-            return
-        if self.lex == "[":
-            self.tok, self.lex = self.tokeniza()
-            while True:
-                self.expr()
-                if self.lex != "]":
-                    self.print_error('Error de Sintaxis', 'se esperaba ] y llego '+ self.lex)
-                self.tok, self.lex = self.tokeniza()
-                if self.lex != "[":
-                    break
-            if self.lex != "=":
-                self.print_error('Error de Sintaxis', 'se esperaba = y llego '+ self.lex)
-
-        if self.lex == "=":
-            self.tok, self.lex = self.tokeniza()
-        if self.lex == "[":
-            self.udim(nombre_variable, 0, 0)
-            return
-
-
-        self.expr()
-        self.insertar_codigo(self.contador_codigo, ["STO", "0",  nombre_variable])
-        self.contador_codigo += 1
-
-
-    def estatutos(self):
-        separador = ';'
-        while separador == ';':
-            separador = '*'
-            if self.lex == ';':
-                self.tok, self.lex = self.tokeniza()
-            if self.lex == '}': break
-
-            self.variables()
-
-            self.comando()
-            
-            
-            if self.lex == ';': separador = self.lex
-
-            if self.tok == "Ide":
-                nombre_variable = self.lex
-                self.tok, self.lex = self.tokeniza()
-                if self.lex == "(":
-                    self.llamada_funcion()
-                    separador = ";"
-
-                elif self.lex == "=" or self.lex == "[":
-                    self.asigna(nombre_variable)
-                    if self.lex == ";":
-                        separador = ";"
-                    else: 
-                        self.print_error('Error de Sintaxis', 'se esperaba ; y llego '+ self.lex)
-                elif self.lex == ";":
-                    separador = ";"
-                elif self.tok == "Ide":
-                    self.contador_linea -= 2
-                    self.contador_columna = len(self.rows[self.contador_linea])
-                    self.print_error('Error de Sintaxis', 'se esperaba ; y llego '+ self.lex)
-
-            elif self.lex == "si":
-                self.sentencia_si()
-                separador = ";"
-            elif self.lex == "para":
-                self.bucle_para()
-                separador = ";"
-            elif self.lex == "ciclo":
-                self.bucle_ciclo_mientras()
-                separador = ";"
-            elif self.lex == "mientras":
-                self.bucle_mientras()
-                separador = ";"
-            elif self.lex == "testfor":
-                self.bucle_for_prueba()
-                separador = ";"
-            elif self.lex == "regresa":
-                self.regresa()
-                separador = ";"
-
-            
-
-            
-    
-
-    def dimens(self):
-        while True:
-            self.tok, self.lex = self.tokeniza()
-            if self.tok == "Ide":
-                if self.obtener_simbolo(self.lex)[1] != "E":
-                    self.print_error("Error de Sintaxis", "se esperaba ENTERO y llego " + self.lex)
-                    break
-                self.expr()
-            elif self.tok != "Ent":
-                self.print_error("Error de Sintaxis", "se esperaba ENTERO y llego " + self.lex)
             else:
-                self.contador_dimension += 1
-                if self.contador_dimension == 1: self.dim1 = self.lex
-                elif self.contador_dimension == 2: self.dim2 = self.lex
+                self.print_error('Error de Sintaxis', 'Solo se puede definir funciones o declarar valiables en el global scope')
+
+#define las funciones
+    def funciones(self):
+            self.lex
+            self.tok
+
+            if self.idx >= len(self.input): return
+            nombre_de_funcion =''
+            while self.idx < len(self.input) and self.lex == 'fn':
                 self.tok, self.lex = self.tokeniza()
-            
-            if self.lex != "]": self.print_error("Error de Sintaxis", "se esperaba ] y llego " + self.lex)
+                if self.tok == 'Ide': nombre_de_funcion = self.lex
+                if self.tok == 'Res' and self.lex == 'principal':
+                        nombre_de_funcion = self.lex
+                        self.insertar_tabla_simbolos('_principal', ['F', 'I', str(self.contador_codigo),'0'])
+                        self.insertar_tabla_simbolos('_P',['I', 'I', 1, 0])
+                elif self.tok != 'Ide':
+                    self.print_error('Error de Sintaxis', 'Se esperaba Ide o principal y llego '+ self.lex)
+                self.tok, self.lex = self.tokeniza();
+                if self.lex != '(': 
+                    self.print_error('Error de Sintaxis', 'Se esperaba ( y llego '+ self.lex)
+                self.tok, self.lex = self.tokeniza();
+                if self.lex != ')': self.definicion_de_parametros()
+                if self.lex != ')':
+                    self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex)
+                self.tok, self.lex = self.tokeniza();
+                if self.lex == '-':
+                    self.tok, self.lex = self.tokeniza()
+                    if self.lex != '>':
+                        self.print_error('Error de Sintaxis', 'Se esperaba > y llego '+ self.lex)
+                    self.tipo()
+                    self.tok, self.lex = self.tokeniza()
+
+                if self.lex != '{':
+                    self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex)
+                if self.lex != '}': self.block()
+
+                if nombre_de_funcion == 'principal':
+                    self.insertar_codigo(self.contador_codigo, ['OPR', '0', '0'])
+                    self.contador_codigo += 1                  
+
+#define los parametros de la funcion declarada
+    def definicion_de_parametros(self): 
+        sec = ','
+        while sec == ',':
+            if self.tok != 'Ide': 
+                self.print_error('Error de Sintaxis', 'Se esperaba Ide y llego '+ self.lex)
             self.tok, self.lex = self.tokeniza()
-            if self.lex != "[": break
-    
-    def udim(self, nombre_identificador, profundidad, indice):
-        contador_indice_arreglo = 0
-
-        while True:
+            if self.lex != ':':
+                self.print_error('Error de Sintaxis', 'Se esperaba : y llego '+ self.lex)
+            self.tipo()
             self.tok, self.lex = self.tokeniza()
-            if self.lex == "[":
-                self.udim(nombre_identificador, 1, contador_indice_arreglo)
-                contador_indice_arreglo += 1
-            else:
-                if profundidad > 0:
-                    self.insertar_codigo(self.contador_codigo, ['LIT', str(indice), '0'])
-                    self.contador_codigo += 1
-                self.insertar_codigo(self.contador_codigo, ['LIT', str(contador_indice_arreglo), '0'])
-                self.contador_codigo += 1
-                contador_indice_arreglo += 1
-                self.expr()
-                
-                self.insertar_codigo(self.contador_codigo, ['STO', '0', nombre_identificador])
-                self.contador_codigo += 1
-            if self.lex != ",":
-                break
+            sec = self.lex
+            if sec == ',':
+                self.tok, self.lex = self.tokeniza()
 
-        if self.lex != "]":
-            self.print_error("Error de Sintaxis", "se esperaba ] y llego " + self.lex)
-
-        self.tok, self.lex = self.tokeniza()
-
+#declara las variables
     def variables(self):
         self.dim1 = 0
         self.dim2 = 0
@@ -803,67 +458,411 @@ class Analizador:
                     self.insertar_codigo(self.contador_codigo, ['JMP', '0', '_principal'])
                     self.contador_codigo += 1
 
+#llama a las funciones
+    def llamada_funcion(self):
+        lexema_anterior = ""
+        while True:
+            lexema_anterior = self.lex
+            self.tok, self.lex = self.tokeniza()
+            if self.lex == ")" and lexema_anterior == "(":
+                break
+            if self.lex == "," and (lexema_anterior == "," or lexema_anterior == "("):
+                self.print_error('Error de Sintaxis', 'Se esperaba PARAMETRO y llego '+ self.lex)
+                break
+            self.expr()
+            if self.lex != ",":
+                break
+        if self.lex != ")":
+            self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex)
+        self.tok, self.lex = self.tokeniza()
 
-    def params(self): 
-        sec = ','
-        while sec == ',':
-            if self.tok != 'Ide': 
-                self.print_error('Error de Sintaxis', 'Se esperaba Ide y llego '+ self.lex)
+
+# Resolucion de expresiones, calcula el resultado de la expresion
+    def termino(self):
+        nombre_identificador = ""
+        is_function = False
+        if self.lex == '(':
             self.tok, self.lex = self.tokeniza()
-            if self.lex != ':':
-                self.print_error('Error de Sintaxis', 'Se esperaba : y llego '+ self.lex)
-            self.tipo()
-            self.tok, self.lex = self.tokeniza()
-            sec = self.lex
-            if sec == ',':
+            self.expr()
+            if self.lex != ')':
+                self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex)
+        if self.tok in ['Ent', 'Dec', 'CtA', 'CtL']:
+            if self.tok in ['Ent', 'Dec', 'CtA']:
+                self.insertar_codigo(self.contador_codigo, ['LIT', self.lex, '0'])
+            elif self.lex == 'verdadero':
+                self.insertar_codigo(self.contador_codigo, ['LIT', 'V', '0'])
+            elif self.lex == 'falso':
+             self.insertar_codigo(self.contador_codigo, ['LIT', 'F', '0'])
+            self.contador_codigo +=  1
+        if self.tok == 'Ide':
+            nombre_identificador = self.lex
+
+
+        self.tok, self.lex = self.tokeniza()
+
+        if self.lex == "(" and nombre_identificador != "":
+            self.llamada_funcion()
+
+        if self.lex == "[" and  nombre_identificador != "" and not is_function:
+            while True:
                 self.tok, self.lex = self.tokeniza()
+                self.expr()
+                if self.lex != "]": self.print_error('Error de Sintaxis', 'Se esperaba ] y llego '+ self.lex)
+                self.tok, self.lex = self.tokeniza()
+                if self.lex != "[":
+                    break
+        if nombre_identificador != "":
+            self.insertar_codigo(self.contador_codigo, ['LOD', nombre_identificador, '0'])
+            self.contador_codigo += 1
+
+    def operador_menos_unitario(self):
+        operador = ""
+        if self.lex == "-":
+            operador = self.lex
+            self.tok, self.lex = self.tokeniza()
+        
+        self.termino()
+        
+        if operador == "-":
+            self.insertar_codigo(self.contador_codigo, ["OPR", "0", "8"])
+            self.contador_codigo += 1
+
+    def operador_multiplicar(self):
+        operador = ""
+        while True:
+            if self.lex in ["*", "/", "%"]:
+                operador = self.lex
+                self.tok, self.lex = self.tokeniza()
+
+            self.operador_menos_unitario()
+
+            if operador == "*":
+                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "4"])
+                self.contador_codigo += 1
+            elif operador == "/":
+                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "5"])
+                self.contador_codigo += 1
+            elif operador == "%":
+                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "6"])
+                self.contador_codigo += 1
+
+
+            if self.lex not in ["*", "/", "%"]:
+                break
+
+    def operador_suma(self):
+        operador = ""
+        bin = False
+
+        while True:
+            if (self.lex == "+" or self.lex == "-") and bin:
+                operador = self.lex
+                self.tok, self.lex = self.tokeniza()
+            self.operador_multiplicar()
+
+            if operador == "+":
+                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "2"])
+                self.contador_codigo += 1
+            elif operador == "-":
+                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "3"])
+                self.contador_codigo += 1
+
+            if(self.lex == "+" or self.lex == "-"):
+                bin = True
+
+            if (self.lex != "+" and self.lex != "-"):
+                break
+
+    def operador_relacional(self):
+        operador = ""
+        self.operador_suma()
+        if self.lex in ["<", ">", "<=", ">=", "!=", "=="]:
+            operador = self.lex
+            self.tok, self.lex = self.tokeniza()
+            self.operador_suma()
+
+            if operador == "<":
+                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "9"])
+                self.contador_codigo += 1
+            elif operador == ">":
+                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "10"])
+                self.contador_codigo += 1
+            elif operador == "<=":
+                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "11"])
+                self.contador_codigo += 1
+            elif operador == ">=":
+                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "12"])
+                self.contador_codigo += 1
+            elif operador == "!=":
+                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "13"])
+                self.contador_codigo += 1
+            elif operador == "==":
+                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "14"])
+                self.contador_codigo += 1
+
+    def operador_not(self):
+        operador = ""
+        if self.lex == "!":
+            operador = self.lex
+            self.tok, self.lex = self.tokeniza()
+        self.operador_relacional()
+
+        if operador == "!":
+            self.insertar_codigo(self.contador_codigo, ["OPR", "0", "17"])
+            self.contador_codigo += 1
+
+    def operador_and(self):
+        operador = ""
+        while True:
+            if self.lex == "&&" or self.lex == "y":
+                operador = self.lex
+                self.tok, self.lex = self.tokeniza()
+            self.operador_not()
+
+            if operador == "&&" or operador == "y": 
+                self.insertar_codigo(self.contador_codigo, ["OPR", "0", "15"])
+                self.contador_codigo += 1
+
+            if self.lex != "&&" and self.lex != "y":
+                break
+
+    def expr(self):
+        operador = ""
+        while True:
+            
+            if self.lex == "||" or self.lex == "o":
+                operador = self.lex
+                self.tok, self.lex = self.tokeniza()
+            self.operador_and()
+            if operador == "||" or operador == "o":
+                self.insertar_codigo(self.contador_codigo, ['OPR', "0", "16"])
+                self.contador_codigo += 1
+
+            #esto es para simular el do while
+            if self.lex != "||" and self.lex != "o":
+                break
+
+
+# Define un nuevo bloque donde poner estatutos y estructuras de control
+    def block(self):
+        if self.lex != "{":
+            self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex)
+        self.tok, self.lex = self.tokeniza()
+
+        if self.lex != "}": self.estatutos()
+        if self.lex != "}": self.print_error("Error de Sintaxis", "Se esperaba FIN DE BLOQUE y llego " + self.lex)
+        self.tok, self.lex = self.tokeniza()
+
+# Analiza los estatutos de cada bloque
+    def estatutos(self):
+        separador = ';'
+        while separador == ';':
+            separador = '*'
+            if self.lex == ';':
+                self.tok, self.lex = self.tokeniza()
+            if self.lex == '}': break
+
+            self.variables()
+
+            self.comando()
+            
+            
+            if self.lex == ';': separador = self.lex
+
+            if self.tok == "Ide":
+                nombre_variable = self.lex
+                self.tok, self.lex = self.tokeniza()
+                if self.lex == "(":
+                    self.llamada_funcion()
+                    separador = ";"
+
+                elif self.lex == "=" or self.lex == "[":
+                    self.asigna(nombre_variable)
+                    if self.lex == ";":
+                        separador = ";"
+                    else: 
+                        self.print_error('Error de Sintaxis', 'se esperaba ; y llego '+ self.lex)
+                elif self.lex == ";":
+                    separador = ";"
+                elif self.tok == "Ide":
+                    self.contador_linea -= 2
+                    self.contador_columna = len(self.rows[self.contador_linea])
+                    self.print_error('Error de Sintaxis', 'se esperaba ; y llego '+ self.lex)
+
+            elif self.lex == "si":
+                self.sentencia_si()
+                separador = ";"
+            elif self.lex == "para":
+                self.bucle_para()
+                separador = ";"
+            elif self.lex == "ciclo":
+                self.bucle_ciclo_mientras()
+                separador = ";"
+            elif self.lex == "mientras":
+                self.bucle_mientras()
+                separador = ";"
+            elif self.lex == "testfor":
+                self.bucle_for_prueba()
+                separador = ";"
+            elif self.lex == "regresa":
+                self.regresa()
+                separador = ";"
+
+
+# Definicion de los built-ins del lenguaje
+    def comando(self): 
+        if self.lex == 'imprimeln!': self.imprimenl()
+        elif self.lex == 'imprimeln': 
+            self.imprimir_y_linea = True
+            self.imprimenl();
+            self.imprimir_y_linea = False
+        elif self.lex == 'lmp': 
+            self.insertar_codigo(self.contador_codigo, ['OPR', '0', '18'])
+            self.contador_codigo += 1
+            self.tok, self.lex = self.tokeniza()
+            if self.lex != ';':
+                self.print_error('Error de Sintaxis', 'se esperaba ; y llego '+ self.lex)
+        elif self.lex == 'leer': self.leer()
+
+    def imprimenl(self):
+        self.tok, self.lex = self.tokeniza()
+        if self.lex != '(':
+            self.print_error('Error de Sintaxis', 'Se esperaba ( y llego '+ self.lex)
+        self.tok, self.lex = self.tokeniza()
+        if self.lex == ')':
+            self.insertar_codigo(self.contador_codigo, ['LIT', '""', '0'])
+            self.contador_codigo += 1
+        elif self.lex != ')':
+            sep = ','
+            while sep == ',':
+                sep = ''
+                self.expr() 
+                sep = self.lex
+                if self.lex != ')': self.tok, self.lex = self.tokeniza()
+                if sep == ',':
+                    self.insertar_codigo(self.contador_codigo, ['OPR', '0', '20'])
+                    self.contador_codigo += 1           
+
+        if self.lex != ')': self.tok, self.lex = self.tokeniza()
+        if self.lex != ')':
+            self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex)
+        else:
+            if self.imprimir_y_linea == False:
+                self.insertar_codigo(self.contador_codigo, ['OPR', '0', '21'])
+            if self.imprimir_y_linea == True:
+                self.insertar_codigo(self.contador_codigo, ['OPR', '0', '20'])
+            self.contador_codigo += 1           
+        
+        self.tok, self.lex = self.tokeniza()
+        if self.lex != ';':
+            self.print_error('Error de Sintaxis', 'se esperaba ; y llego '+ self.lex)
+
+    def leer(self):  #Comando leer Oxido
+        self.tok, self.lex = self.tokeniza()
+        nombre_identificador = ''
+        if self.lex != '(':
+            self.print_error('Error de Sintaxis', 'Se esperaba ( y llego '+ self.lex)
+        self.tok, self.lex = self.tokeniza()
+        if self.tok != 'Ide':
+            self.print_error('Error de Sintaxis', 'Se esperaba Identificador y llego '+ self.lex)
+        else:
+            nombre_identificador = self.lex
+            self.tok, self.lex = self.tokeniza()
+            if self.lex == '[':
+                self.udim(nombre_identificador, 0, 0)
+        if self.lex == ')':
+            self.insertar_codigo(self.contador_codigo, ['OPR', nombre_identificador, '19'])
+            self.contador_codigo += 1
+        else:
+            self.print_error('Error de Sintaxis', 'Se esperaba ")" y llego '+ self.lex)
+        
+        self.tok, self.lex = self.tokeniza()
+        if self.lex != ';':
+            self.print_error('Error de Sintaxis', 'se esperaba ; y llego '+ self.lex)
+
+# Asignacion de variables y arreglos/matrices
+    def asigna(self, nombre_variable):
+        if self.lex != "=" and self.lex != "[" and self.tok not in ["Ent", "Dec","CtL", "CtA"]:
+            self.print_error('Error de Sintaxis', 'se esperaba = o POSICION EN ARREGLO y llego '+ self.lex)
+            return
+        if self.lex == "[":
+            self.tok, self.lex = self.tokeniza()
+            while True:
+                self.expr()
+                if self.lex != "]":
+                    self.print_error('Error de Sintaxis', 'se esperaba ] y llego '+ self.lex)
+                self.tok, self.lex = self.tokeniza()
+                if self.lex != "[":
+                    break
+            if self.lex != "=":
+                self.print_error('Error de Sintaxis', 'se esperaba = y llego '+ self.lex)
+
+        if self.lex == "=":
+            self.tok, self.lex = self.tokeniza()
+        if self.lex == "[":
+            self.udim(nombre_variable, 0, 0)
+            return
+
+
+        self.expr()
+        self.insertar_codigo(self.contador_codigo, ["STO", "0",  nombre_variable])
+        self.contador_codigo += 1
+
+    def dimens(self):
+        while True:
+            self.tok, self.lex = self.tokeniza()
+            if self.tok == "Ide":
+                if self.obtener_simbolo(self.lex)[1] != "E":
+                    self.print_error("Error de Sintaxis", "se esperaba ENTERO y llego " + self.lex)
+                    break
+                self.expr()
+            elif self.tok != "Ent":
+                self.print_error("Error de Sintaxis", "se esperaba ENTERO y llego " + self.lex)
+            else:
+                self.contador_dimension += 1
+                if self.contador_dimension == 1: self.dim1 = self.lex
+                elif self.contador_dimension == 2: self.dim2 = self.lex
+                self.tok, self.lex = self.tokeniza()
+            
+            if self.lex != "]": self.print_error("Error de Sintaxis", "se esperaba ] y llego " + self.lex)
+            self.tok, self.lex = self.tokeniza()
+            if self.lex != "[": break
+    
+    def udim(self, nombre_identificador, profundidad, indice):
+        contador_indice_arreglo = 0
+
+        while True:
+            self.tok, self.lex = self.tokeniza()
+            if self.lex == "[":
+                self.udim(nombre_identificador, 1, contador_indice_arreglo)
+                contador_indice_arreglo += 1
+            else:
+                if profundidad > 0:
+                    self.insertar_codigo(self.contador_codigo, ['LIT', str(indice), '0'])
+                    self.contador_codigo += 1
+                self.insertar_codigo(self.contador_codigo, ['LIT', str(contador_indice_arreglo), '0'])
+                self.contador_codigo += 1
+                contador_indice_arreglo += 1
+                self.expr()
+                
+                self.insertar_codigo(self.contador_codigo, ['STO', '0', nombre_identificador])
+                self.contador_codigo += 1
+            if self.lex != ",":
+                break
+
+        if self.lex != "]":
+            self.print_error("Error de Sintaxis", "se esperaba ] y llego " + self.lex)
+
+        self.tok, self.lex = self.tokeniza()
+
 
     def tipo(self):
         self.tok, self.lex = self.tokeniza()
         if not(self.lex in ['entero', 'decimal', 'logico', 'palabra']):
             self.print_error('Error de Sintaxis', 'Se esperaba entero, decimal, logico o palabra y llego '+ self.lex)
-            
 
-    def funciones(self):
-        self.lex
-        self.tok
 
-        if self.idx >= len(self.input): return
-        nombre_de_funcion =''
-        while self.idx < len(self.input) and self.lex == 'fn':
-            self.tok, self.lex = self.tokeniza()
-            if self.tok == 'Ide': nombre_de_funcion = self.lex
-            if self.tok == 'Res' and self.lex == 'principal':
-                    nombre_de_funcion = self.lex
-                    self.insertar_tabla_simbolos('_principal', ['F', 'I', str(self.contador_codigo),'0'])
-                    self.insertar_tabla_simbolos('_P',['I', 'I', 1, 0])
-            elif self.tok != 'Ide':
-                self.print_error('Error de Sintaxis', 'Se esperaba Ide o principal y llego '+ self.lex)
-            self.tok, self.lex = self.tokeniza();
-            if self.lex != '(': 
-                self.print_error('Error de Sintaxis', 'Se esperaba ( y llego '+ self.lex)
-            self.tok, self.lex = self.tokeniza();
-            if self.lex != ')': self.params()
-            if self.lex != ')':
-                self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex)
-            self.tok, self.lex = self.tokeniza();
-            if self.lex == '-':
-                self.tok, self.lex = self.tokeniza()
-                if self.lex != '>':
-                    self.print_error('Error de Sintaxis', 'Se esperaba > y llego '+ self.lex)
-                self.tipo()
-                self.tok, self.lex = self.tokeniza()
-
-            if self.lex != '{':
-                self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex)
-            if self.lex != '}': self.block()
-
-            if nombre_de_funcion == 'principal':
-                self.insertar_codigo(self.contador_codigo, ['OPR', '0', '0'])
-                self.contador_codigo += 1                  
-
-        
-
+# Estructuras de control del lenguaje           
     def sentencia_si(self):
         self.tok, self.lex = self.tokeniza()
         self.expr()
@@ -894,7 +893,6 @@ class Analizador:
 
         else:
             self.insertar_tabla_simbolos(etiqueta_x, ['I', 'I', str(self.contador_codigo), 0])
-
 
     def bucle_para(self):
         self.tok, self.lex = self.tokeniza()
@@ -1019,8 +1017,7 @@ class Analizador:
         self.insertar_codigo(self.contador_codigo, ["JMP", "0", str(direccion1)])
         self.contador_codigo += 1
         self.insertar_tabla_simbolos(etiqueta_x, ['I', 'I', str(self.contador_codigo), 0])
-
-        
+   
     def bucle_for_prueba(self):
         self.tok, self.lex = self.tokeniza()
         if self.lex != ";": self.estatutos()
@@ -1063,15 +1060,6 @@ class Analizador:
         self.contador_codigo += 1
         self.insertar_tabla_simbolos(etiqueta_x, ['I', 'I', str(self.contador_codigo), 0])
 
-    def block(self):
-        if self.lex != "{":
-            self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex)
-        self.tok, self.lex = self.tokeniza()
-
-        if self.lex != "}": self.estatutos()
-        if self.lex != "}": self.print_error("Error de Sintaxis", "Se esperaba FIN DE BLOQUE y llego " + self.lex)
-        self.tok, self.lex = self.tokeniza()
-
     def regresa(self):
         self.tok, self.lex = self.tokeniza()
         self.expr()
@@ -1079,6 +1067,41 @@ class Analizador:
             self.print_error('Error de Sintaxis', 'Se esperaba ; y llego '+ self.lex)
 
 
+###############################################################################
+# Inicia Analizadores, Crea arreglo del programa PL0 y escribe al archivo PL0 #
+###############################################################################
+    def construir_archivo_PL0(self):
+        self.idx = 0
+        if len(self.input) > 0:
+            self.create_blank_PL0_array()
+            self.analizador_sintactico()
+            nombre_archivo_salida = self.nombre_del_archivo[0:len(self.nombre_del_archivo)-3] + 'eje'
+            try:
+                with open(str(pathlib.Path(__file__).parent.resolve()) + "/" + nombre_archivo_salida, 'w') as archivo_de_salida:
+                    for x, y in self.tab_sim.items():
+                        archivo_de_salida.write(x + ',')
+                        archivo_de_salida.write(y[0]+',')
+                        archivo_de_salida.write(y[1]+',')
+                        archivo_de_salida.write(str(y[2])+',')
+                        archivo_de_salida.write(str(y[3])+',')
+                        archivo_de_salida.write('#,\n')
+                    archivo_de_salida.write('@\n')
+                    for i in range(1, self.contador_codigo):
+                        archivo_de_salida.write(str(i) + ' ')
+                        archivo_de_salida.write(self.pl0_program[i][0] + ' ')
+                        archivo_de_salida.write(self.pl0_program[i][1] + ', ')
+                        archivo_de_salida.write(self.pl0_program[i][2]  + '\n')
+                archivo_de_salida.close()
+            except FileNotFoundError:
+                print(self.nombre_del_archivo, 'No exite volver a intentar')
+
+    def create_blank_PL0_array(self):
+        for i in range(0, 10000):
+            self.pl0_program.append([])
+
+###############################
+# Funcion Main del compilador #
+###############################
 if __name__ == "__main__":
     #pedimos el nombre del archivo
     nombre_del_archivo = input("Ingresa el nombre del archivo (.icc) [.]=Salir: ")
