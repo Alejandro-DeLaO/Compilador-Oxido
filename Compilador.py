@@ -561,7 +561,7 @@ class Analizador:
             if (self.lex == "+" or self.lex == "-") and bin:
                 operador = self.lex
                 self.tok, self.lex = self.tokeniza()
-                if self.lex != "(" or self.tok != "Ide" or self.tok not in ['Ent', 'Dec', 'CtA', 'CtL']:
+                if self.lex != "(" and self.tok != "Ide" and self.tok not in ['Ent', 'Dec', 'CtA', 'CtL']:
                     if self.lex != "]": self.print_error('Error de Sintaxis', 'Se esperaba termino y llego '+ self.lex)
             self.operador_multiplicar()
 
