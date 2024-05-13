@@ -200,8 +200,8 @@ class Analizador:
                     #cuando se haya terminado el comentario, salimos del segundo while
                     self.contador_linea += 1
                     break
-
-                if estado == 1 and caracter in [":", "=", " ", "[", "("]:
+                    
+                if estado == 1 and caracter.isalpha() != True and caracter.isdigit() != True and caracter != "_":
                     if lex == "o":
                         estado = self.ACP
                         estAnt = 15
@@ -210,16 +210,18 @@ class Analizador:
                         estado = self.ACP
                         estAnt = 9
                         break
+
+                if estado == 1 and caracter in self.univer_dlm: 
+                    estAnt = estado
+                    estado = self.ACP
+
                 if estado != 6 and estado != 16 and caracter in self.univer_dlm:
                     if caracter == "\n":
                         self.contador_linea += 1
                         self.contador_columna = 0
                     break
 
-                if estado == 1 and caracter in self.univer_dlm: 
-                    estAnt = estado
-                    estado = self.ACP
-                    break
+                
 
                 col = self.columna(caracter)
 
@@ -373,6 +375,9 @@ class Analizador:
         nombre_del_identificador = ""
         total_de_variables = 0
         while True:
+            self.dim1 = 0
+            self.dim2 = 0
+            self.contador_dimension = 0
             self.tok, self.lex = self.tokeniza();
             if self.lex == "mut":
                 clase_de_variable = 'V'
@@ -387,9 +392,12 @@ class Analizador:
                 self.tok, self.lex = self.tokeniza()
             else:
                 self.print_error('Error de Sintaxis', 'Se esperaba IDENTIFICADOR y llego ' + self.lex)
+
+            if self.lex == "[":
+                self.dimens()
             
             nombres_de_variables.append(nombre_del_identificador)
-            self.insertar_tabla_simbolos(nombre_del_identificador, [clase_de_variable, "I", "0", "0"])
+            self.insertar_tabla_simbolos(nombre_del_identificador, [clase_de_variable, "I", str(self.dim1), str(self.dim2)])
 
             if self.lex != ",":
                 break
@@ -896,7 +904,7 @@ class Analizador:
             self.tok, self.lex = self.tokeniza()
             if self.tok == "Ide":
                 if self.obtener_simbolo(self.lex)[1] != "E":
-                    self.print_error("Error de Sintaxis", "se esperaba ENTERO y llego " + self.lex)
+                    self.print_error("Error de Semantica", "se esperaba ENTERO y llego " + self.lex)
                 self.expr()
             else:
                 self.expr()
