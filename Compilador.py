@@ -311,7 +311,7 @@ class Analizador:
             elif self.idx >= len(self.input):
                 break
             else:
-                self.print_error('Error de Sintaxis', 'Solo se puede definir funciones o declarar valiables en el global scope')
+                self.print_error('Error de Sintaxis', 'Lexema inesperado ' + self.lex)
 
 # Define las funciones
     def funciones(self):
@@ -366,6 +366,119 @@ class Analizador:
             if sec == ',':
                 self.tok, self.lex = self.tokeniza()
 
+
+    def declaracion_multivariable(self):
+        nombres_de_variables = []
+        clase_de_variable = ""
+        nombre_del_identificador = ""
+        total_de_variables = 0
+        while True:
+            self.tok, self.lex = self.tokeniza();
+            if self.lex == "mut":
+                clase_de_variable = 'V'
+                self.tok, self.lex = self.tokeniza()
+            elif self.tok == "Ide":
+                clase_de_variable = 'C'
+            else:
+                self.print_error('Error de Sintaxis', 'Se esperaba mut o IDENTIFICADOR y llego ' + self.lex)
+
+            if self.tok == "Ide":
+                nombre_del_identificador = self.lex 
+                self.tok, self.lex = self.tokeniza()
+            else:
+                self.print_error('Error de Sintaxis', 'Se esperaba IDENTIFICADOR y llego ' + self.lex)
+            
+            nombres_de_variables.append(nombre_del_identificador)
+            self.insertar_tabla_simbolos(nombre_del_identificador, [clase_de_variable, "I", "0", "0"])
+
+            if self.lex != ",":
+                break
+
+        if self.lex != ")":
+            self.print_error('Error de Sintaxis', 'Se esperaba ) y llego ' + self.lex)
+
+        total_de_variables = len(nombres_de_variables)
+        self.tok, self.lex = self.tokeniza()
+
+        if self.lex == ";":
+            self.print_error('Error de Sintaxis', 'Se esperaba ETIQUETA DE TIPO o ASIGNACION y llego ' + self.lex)
+
+        if self.lex == ":":
+            self.tok, self.lex = self.tokeniza()
+            if total_de_variables == 1 and self.lex != "(":
+                if self.lex in ["alfabetico", "logico", "entero", "decimal"]:
+                    
+                    tipo_de_dato = "I"
+                    if self.lex == "alfabetico": tipo_de_dato = "A"
+                    elif self.lex == "logico": tipo_de_dato = "L"
+                    elif self.lex == "entero": tipo_de_dato = "E"
+                    elif self.lex == "decimal": tipo_de_dato = "D"
+
+                    #obtengo el unico nombre guardado, uso el nombre como llave para obtener la coleccion de la tabla de simbolos
+                    #cambio el valor de la posicion 1 (el tipo de dato) al tipo correspondiente
+                    self.tab_sim[nombres_de_variables[0]][1] = tipo_de_dato
+                else:
+                    self.print_error('Error de Sintaxis', 'Se esperaba TIPO DE DATO y llego ' + self.lex)
+            elif self.lex == "(":
+                variable_actual = 0
+                while True:
+                    if variable_actual == total_de_variables:
+                        self.print_error('Error de Semantica', 'Se intenta asignar mas tipos que variables')
+                    self.tok, self.lex = self.tokeniza()
+                    if self.lex in ["alfabetico", "logico", "entero", "decimal"]:
+                        tipo_de_dato = "I"
+                        if self.lex == "alfabetico": tipo_de_dato = "A"
+                        elif self.lex == "logico": tipo_de_dato = "L"
+                        elif self.lex == "entero": tipo_de_dato = "E"
+                        elif self.lex == "decimal": tipo_de_dato = "D"
+                        self.tab_sim[nombres_de_variables[variable_actual]][1] = tipo_de_dato
+                        variable_actual += 1
+                        self.tok, self.lex = self.tokeniza()
+                    else:
+                        self.print_error('Error de Sintaxis', 'Se esperaba TIPO DE DATO y llego ' + self.lex)
+                    if self.lex != ",":
+                        if variable_actual < total_de_variables:
+                            self.print_error('Error de Semantica', 'Se intenta asignar menos tipos que variables')
+                        break
+
+                if self.lex != ")":
+                    self.print_error('Error de Sintaxis', 'Se esperaba ) y llego ' + self.lex)
+                self.tok, self.lex = self.tokeniza()
+                if self.lex == ";" or self.lex != "=":
+                    return
+            else:
+                self.print_error('Error de Sintaxis', 'Se esperaba ( y llego ' + self.lex)
+        
+
+        if self.lex == "=":
+            self.tok, self.lex = self.tokeniza()
+            if total_de_variables == 1 and self.lex != "(":
+                self.asignar_valor(nombres_de_variables[0])
+                return
+            if self.lex != "(":
+                self.print_error('Error de Sintaxis', 'Se esperaba ( y llego ' + self.lex)
+            
+            
+            variable_actual = 0
+            while True:
+                if variable_actual == total_de_variables:
+                    self.print_error('Error de Semantica', 'Se intenta asignar mas valores que variables')
+                self.tok, self.lex = self.tokeniza()
+                self.asignar_valor(nombres_de_variables[variable_actual])
+                variable_actual += 1
+                if self.lex != ",":
+                    if variable_actual < total_de_variables:
+                        self.print_error('Error de Semantica', 'Se intenta asignar menos valores que variables')
+                    break
+
+            if self.lex != ")":
+                self.print_error('Error de Sintaxis', 'Se esperaba ) y llego ' + self.lex)
+            self.tok, self.lex = self.tokeniza()
+            return
+        
+        self.print_error('Error de Sintaxis', 'Lexema inesperado ' + self.lex)
+
+
     def declaracion_variables(self):
         self.dim1 = 0
         self.dim2 = 0
@@ -374,8 +487,9 @@ class Analizador:
         clase_de_variable = ''
         valor = ''
         self.tok, self.lex = self.tokeniza();
-        if self.tok == "(":
-            pass
+        if self.lex == "(":
+            self.declaracion_multivariable()
+            return
 
         elif self.lex == "mut":
             clase_de_variable = 'V'
@@ -824,8 +938,8 @@ class Analizador:
 
     def tipo(self):
         self.tok, self.lex = self.tokeniza()
-        if not(self.lex in ['entero', 'decimal', 'logico', 'palabra']):
-            self.print_error('Error de Sintaxis', 'Se esperaba entero, decimal, logico o palabra y llego '+ self.lex)
+        if not(self.lex in ['entero', 'decimal', 'logico', 'alfabetico']):
+            self.print_error('Error de Sintaxis', 'Se esperaba entero, decimal, logico o alfabetico y llego '+ self.lex)
 
 
 # Estructuras de control del lenguaje           
