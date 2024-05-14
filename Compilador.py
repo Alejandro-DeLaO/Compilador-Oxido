@@ -796,27 +796,62 @@ class Analizador:
         self.tok, self.lex = self.tokeniza()
 
         if self.lex != "}": self.estatutos()
+        if self.idx >= len(self.input):
+            self.rows.append("")
         if self.lex != "}": self.print_error("Error de Sintaxis", "Se esperaba FIN DE BLOQUE y llego " + self.lex , "")
         self.tok, self.lex = self.tokeniza()
 
 # Analiza los estatutos de cada bloque
     def estatutos(self):
-        separador = ';'
-        while separador == ';':
-            separador = '*'
-            if self.lex == ';':
-                self.tok, self.lex = self.tokeniza()
+
+        while True:
+            linea_evaluada = self.contador_linea
             if self.lex == '}': break
 
-            if self.lex == "sea":
+            elif self.lex == "sea":
                 self.declaracion_variables()
+                if self.lex != ";" or self.contador_linea != linea_evaluada:
+                    if self.contador_linea != linea_evaluada:
+                        self.print_semicolon_newline_error(linea_evaluada)
+                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                self.tok, self.lex = self.tokeniza()
 
-            self.comando()
+            elif self.lex == 'imprimeln!': 
+                self.imprimenl()
+                if self.lex != ";" or self.contador_linea != linea_evaluada:
+                    if self.contador_linea != linea_evaluada:
+                        self.print_semicolon_newline_error(linea_evaluada)
+                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                self.tok, self.lex = self.tokeniza()
             
+            elif self.lex == 'imprimeln': 
+                self.imprimir_y_linea = True
+                self.imprimenl();
+                if self.lex != ";" or self.contador_linea != linea_evaluada:
+                    if self.contador_linea != linea_evaluada:
+                        self.print_semicolon_newline_error(linea_evaluada)
+                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                self.tok, self.lex = self.tokeniza()
+                self.imprimir_y_linea = False
             
-            if self.lex == ';': separador = self.lex
-
-            if self.tok == "Ide":
+            elif self.lex == 'lmp': 
+                self.insertar_codigo(self.contador_codigo, ['OPR', '0', '18'])
+                self.tok, self.lex = self.tokeniza()
+                if self.lex != ";" or self.contador_linea != linea_evaluada:
+                    if self.contador_linea != linea_evaluada:
+                        self.print_semicolon_newline_error(linea_evaluada)
+                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                self.tok, self.lex = self.tokeniza()
+            
+            elif self.lex == 'leer': 
+                self.leer()
+                if self.lex != ";" or self.contador_linea != linea_evaluada:
+                    if self.contador_linea != linea_evaluada:
+                        self.print_semicolon_newline_error(linea_evaluada)
+                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                self.tok, self.lex = self.tokeniza()
+            
+            elif self.tok == "Ide":
                 nombre_identificador = self.lex
                 self.tok, self.lex = self.tokeniza()
                 if self.lex == "(":
@@ -837,44 +872,45 @@ class Analizador:
                 elif self.lex == "=":
                     self.tok, self.lex = self.tokeniza()
                     self.asignar_valor(nombre_identificador)
-                if self.lex == ";":
-                    separador = ";"
-                else: 
-                    self.print_error('Error de Sintaxis', 'se esperaba ; y llego '+ self.lex, ";")
+                if self.lex != ";" or self.contador_linea != linea_evaluada:
+                    if self.contador_linea != linea_evaluada:
+                        self.print_semicolon_newline_error(linea_evaluada)
+                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                self.tok, self.lex = self.tokeniza()
 
             elif self.lex == "si":
                 self.sentencia_si()
-                separador = ";"
+            
             elif self.lex == "para":
                 self.bucle_para()
-                separador = ";"
+            
             elif self.lex == "ciclo":
-                self.bucle_ciclo_mientras()
-                separador = ";"
+                linea_evaluada = self.bucle_ciclo_mientras()
+                if self.lex != ";" or self.contador_linea != linea_evaluada:
+                    if self.contador_linea != linea_evaluada:
+                        self.print_semicolon_newline_error(linea_evaluada)
+                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                self.tok, self.lex = self.tokeniza()
+            
             elif self.lex == "mientras":
                 self.bucle_mientras()
-                separador = ";"
+            
             elif self.lex == "testfor":
                 self.bucle_for_prueba()
-                separador = ";"
+            
             elif self.lex == "regresa":
                 self.regresa()
-                separador = ";"
-
+                if self.lex != ";" or self.contador_linea != linea_evaluada:
+                    if self.contador_linea != linea_evaluada:
+                        self.print_semicolon_newline_error(linea_evaluada)
+                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                self.tok, self.lex = self.tokeniza()
+            elif self.idx >= len(self.input):
+                break
+            else:
+                self.print_error('Error de Sintaxis', 'Lexema inesperado ' + self.lex, "")
 
 # Definicion de los built-ins del lenguaje
-    def comando(self): 
-        if self.lex == 'imprimeln!': self.imprimenl()
-        elif self.lex == 'imprimeln': 
-            self.imprimir_y_linea = True
-            self.imprimenl();
-            self.imprimir_y_linea = False
-        elif self.lex == 'lmp': 
-            self.insertar_codigo(self.contador_codigo, ['OPR', '0', '18'])
-            self.tok, self.lex = self.tokeniza()
-            if self.lex != ';':
-                self.print_error('Error de Sintaxis', 'se esperaba ; y llego '+ self.lex, ";")
-        elif self.lex == 'leer': self.leer()
 
     def imprimenl(self):
         self.tok, self.lex = self.tokeniza()
@@ -903,8 +939,6 @@ class Analizador:
                 self.insertar_codigo(self.contador_codigo, ['OPR', '0', '20'])
         
         self.tok, self.lex = self.tokeniza()
-        if self.lex != ';':
-            self.print_error('Error de Sintaxis', 'se esperaba ; y llego '+ self.lex, ";")
 
     def leer(self):  #Comando leer Oxido
         self.tok, self.lex = self.tokeniza()
@@ -925,8 +959,6 @@ class Analizador:
             self.print_error('Error de Sintaxis', 'Se esperaba ")" y llego '+ self.lex, "")
         
         self.tok, self.lex = self.tokeniza()
-        if self.lex != ';':
-            self.print_error('Error de Sintaxis', 'se esperaba ; y llego '+ self.lex, ";")
 
 
     def dimens(self):
@@ -1094,14 +1126,15 @@ class Analizador:
                     self.print_error('Error de Sintaxis', 'Se esperaba RANGO O ARREGO y llego '+ self.lex, "RANGO O ARREGO") 
 
     def bucle_ciclo_mientras(self):
+        numero_de_linea_del_mientras = self.contador_linea
         self.tok, self.lex = self.tokeniza()
         self.block()
         if self.lex != "mientras":
             self.print_error('Error de Sintaxis', 'Se esperaba MIENTRAS y llego '+ self.lex, "MIENTRAS") 
+        numero_de_linea_del_mientras = self.contador_linea
         self.tok, self.lex = self.tokeniza()
         self.expr()
-        if self.lex != ";":
-            self.print_error('Error de Sintaxis', 'Se esperaba ; y llego '+ self.lex, ";") 
+        return numero_de_linea_del_mientras
 
     def bucle_mientras(self):
 
@@ -1172,8 +1205,6 @@ class Analizador:
     def regresa(self):
         self.tok, self.lex = self.tokeniza()
         self.expr()
-        if self.lex != ";":
-            self.print_error('Error de Sintaxis', 'Se esperaba ; y llego '+ self.lex, ";")
 
 
 ###############################################################################

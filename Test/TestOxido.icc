@@ -43,6 +43,3 @@ fn principal() {
    leer(nom);
    imprimeln!("Felicidades ", nom, " ya PASASTE Compiladoes");
 }
-
-
-
