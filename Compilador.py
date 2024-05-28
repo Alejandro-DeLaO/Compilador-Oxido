@@ -26,7 +26,7 @@ class Analizador:
     #Delimitadores universales||secuencias de escape
     univer_dlm = [" ", "\t", "\n"]
     #delimitadores
-    dlm = ["{", "}", "[", "]", "(", ")", ";", ",", ":", "."]
+    dlm = ["{", "}", "[", "]", "(", ")", ";", ",", ":"]
     #simbolos
     sym = ["#", "$", "¿", "?", "¡", "|", "`", "~", "\\", "@", "&"]
     #matriz de transicion
@@ -70,6 +70,9 @@ class Analizador:
     contador_columna = 0
     contador_etiquetas = 0
     imprimir_y_linea = False
+    fila_del_lexema_actual = 1
+    current_lex_last_char_position = 0
+    previous_lex =[]
 
     # Inicializador de la clase
     def __init__(self, nombre_del_archivo, input, rows):
@@ -92,45 +95,37 @@ class Analizador:
     
     def obtener_valor(self, key):
         return self.tabla_de_valores[key]
-    
-    def print_semicolon_newline_error(self, numero_de_linea_evaluada):
-        linea_a_analizar = self.rows[numero_de_linea_evaluada - 1]
-        longitud_de_linea = len(linea_a_analizar)
-        idx = longitud_de_linea - 1
-        while idx >= 0:
-            if linea_a_analizar[idx] not in self.univer_dlm:
-                idx += 1
-                break
-            idx -= 1
-        print("\033[1;31mError de Sintaxis Se esperaba ;\x1b[0m")
-        print("\033[1;31m" + "\n[" + str(numero_de_linea_evaluada) + "]" + " [" + str(idx) + "] \x1b[0m", end="")
-        print(self.rows[numero_de_linea_evaluada - 1] + "\033[1;31m", end="")
-        sangria = idx + len(str(numero_de_linea_evaluada)) + len(str(idx)) + 4 + 2 + 1
-
-        print("^".rjust(sangria))
-        print(";".rjust(sangria) + "\x1b[0m")
-        sys.exit()
-
-    def print_error_line(self, error_line_num, correction):
-        print("\033[1;31m" + "\n[" + str(self.contador_linea) + "]" + " [" + str(self.contador_columna) + "] \x1b[0m", end="")
-        print(self.rows[error_line_num] + "\033[1;31m", end="")
-        i = 0
-        highlight = ""
-        while i < len(self.lex):
-            highlight += "^"
-            i += 1
-
-        #el 4 por los [], el 2 por los espacios 
-        sangria = self.contador_columna + len(str(self.contador_linea)) + len(str(self.contador_columna)) + 4 + 2
-
-        print(highlight.rjust(sangria) + "\x1b[0m")
-
-    # Metodo para imprimir errores
-    def print_error(self, type, message, correction):
+        
+    def print_error(self, type, message, helper):
         print("\033[1;31m"+type, message + "\x1b[0m")
-        self.print_error_line(self.contador_linea-1, correction)
-        sys.exit()
 
+        if helper != "":
+            numero_de_linea_del_lexema = self.previous_lex[1]
+            #restamos 1 porque la linea inicia en 1 y los arreglos en 0
+            linea_del_lexema = self.rows[numero_de_linea_del_lexema-1]
+            numero_del_ultio_char = self.previous_lex[2]
+
+            print("\033[1;31m" + "\n[" + str(numero_de_linea_del_lexema) + "]" + " [" + str(numero_del_ultio_char) + "] \x1b[0m", end="")
+            print(linea_del_lexema + "\033[1;31m", end="")
+            #sumamos un 1 extra para poner el caracter despues del ultimo lexema
+            sangria = numero_del_ultio_char + len(str(numero_de_linea_del_lexema)) + len(str(numero_del_ultio_char)) + 4 + 2 + 1
+
+            print("^".rjust(sangria) + " ayuda: agrega " + helper + " aqui" +"\x1b[0m")
+
+        else:
+            print("\033[1;31m" + "\n[" + str(self.contador_linea) + "]" + " [" + str(self.contador_columna) + "] \x1b[0m", end="")
+            print(self.rows[self.contador_linea-1] + "\033[1;31m", end="")
+            i = 0
+            highlight = ""
+            while i < len(self.lex):
+                highlight += "^"
+                i += 1
+
+            #el 4 por los [], el 2 por los espacios 
+            sangria = self.contador_columna + len(str(self.contador_linea)) + len(str(self.contador_columna)) + 4 + 2
+
+            print(highlight.rjust(sangria) + "\x1b[0m")
+        sys.exit()
 
 #################################
 # Metodos del analizador Lexico #
@@ -154,11 +149,12 @@ class Analizador:
         elif c in "/":           return 13
         elif c in self.univer_dlm:      return 0
         else:
-            self.print_error("Error Lexico ", str(c) + " No es valido en el alfabeto del lenguaje", "Invalido")
+            self.print_error("Error Lexico ", str(c) + " No es valido en el alfabeto del lenguaje", "")
         return self.ERR
 
     # Inicia el analizador lexico
     def tokeniza(self):
+        self.previous_lex = [self.lex, self.fila_del_lexema_actual ,self.current_lex_last_char_position]
         if self.idx >= len(self.input):
             return '', ''
 
@@ -242,9 +238,10 @@ class Analizador:
 
                 if estado != 6 and estado != 16 and caracter in self.univer_dlm:
                     break
-                
+                if estado == 16 and caracter == "\n":
+                    break
                 self.idx += 1
-                if caracter != '\t' and caracter != '\n' and caracter != '': self.contador_columna += 1 
+                if caracter != "\n": self.contador_columna += 1 
                 #if caracter == '\t': self.contador_columna += 4
 
                 col = self.columna(caracter)
@@ -268,10 +265,16 @@ class Analizador:
             if estado != self.ACP and estado != self.ERR: estAnt = estado
 
             if estAnt == 3:
+                self.lex = lex
+                self.tok = "NtK"
                 self.print_error("Error Lexico", lex + " decimal incompleto" , "")
             elif estAnt == 16:
+                self.lex = lex
+                self.tok = "NtK"
                 self.print_error('Error Lexico', 'Cte Alfabetica SIN cerrar '+lex, "")
             elif estAnt == 8:
+                self.lex = lex
+                self.tok = "NtK"
                 self.print_error('Error Lexico', 'Operador logico incompleto '+lex, "")   
             elif estAnt == 1:
                 tok = "Ide"
@@ -305,7 +308,8 @@ class Analizador:
                 tok = "Ran"
             else:
                 tok = "NtK"
-
+            self.current_lex_last_char_position = self.contador_columna 
+            self.fila_del_lexema_actual = self.contador_linea
             return tok, lex
     
     #Imprime todos los tokens
@@ -332,10 +336,8 @@ class Analizador:
             linea_evaluada = self.contador_linea
             if self.lex == "sea":
                 self.declaracion_variables()
-                if self.lex != ";" or self.contador_linea != linea_evaluada:
-                    if self.contador_linea != linea_evaluada:
-                        self.print_semicolon_newline_error(linea_evaluada)
-                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                if self.lex != ";":
+                    self.print_error('Error de Sintaxis',  'Se esperaba ; y llego '+ self.lex, ";")
                 self.tok, self.lex = self.tokeniza()
             elif self.lex == "fn":
                 self.funciones()
@@ -361,24 +363,24 @@ class Analizador:
                         self.insertar_tabla_simbolos('_principal', ['F', 'I', str(self.contador_codigo),'0'])
                         self.insertar_tabla_simbolos('_P',['I', 'I', 1, 0])
                 elif self.tok != 'Ide':
-                    self.print_error('Error de Sintaxis', 'Se esperaba Ide o principal y llego '+ self.lex , "Ide o principal")
+                    self.print_error('Error de Sintaxis', 'Se esperaba Ide o principal y llego '+ self.lex , "Identificador o principal")
                 self.tok, self.lex = self.tokeniza();
                 if self.lex != '(': 
-                    self.print_error('Error de Sintaxis', 'Se esperaba ( y llego '+ self.lex, "")
+                    self.print_error('Error de Sintaxis', 'Se esperaba ( y llego '+ self.lex, "(")
                 self.tok, self.lex = self.tokeniza();
                 if self.lex != ')': self.definicion_de_parametros()
                 if self.lex != ')':
-                    self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex, "")
+                    self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex, ")")
                 self.tok, self.lex = self.tokeniza();
                 if self.lex == '-':
                     self.tok, self.lex = self.tokeniza()
                     if self.lex != '>':
-                        self.print_error('Error de Sintaxis', 'Se esperaba > y llego '+ self.lex, "")
+                        self.print_error('Error de Sintaxis', 'Se esperaba > y llego '+ self.lex, ">")
                     self.tipo()
                     self.tok, self.lex = self.tokeniza()
 
                 if self.lex != '{':
-                    self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "")
+                    self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "{")
                 if self.lex != '}': self.block()
 
                 if nombre_de_funcion == 'principal':
@@ -389,7 +391,7 @@ class Analizador:
         sec = ','
         while sec == ',':
             if self.tok != 'Ide': 
-                self.print_error('Error de Sintaxis', 'Se esperaba Ide y llego '+ self.lex, "Ide")
+                self.print_error('Error de Sintaxis', 'Se esperaba args o ) y llego '+ self.lex, "args o )")
             self.tok, self.lex = self.tokeniza()
             if self.lex != ':':
                 self.print_error('Error de Sintaxis', 'Se esperaba : y llego '+ self.lex, ":")
@@ -434,7 +436,7 @@ class Analizador:
                 break
 
         if self.lex != ")":
-            self.print_error('Error de Sintaxis', 'Se esperaba ) y llego ' + self.lex, "")
+            self.print_error('Error de Sintaxis', 'Se esperaba ) y llego ' + self.lex, ")")
 
         total_de_variables = len(nombres_de_variables)
         self.tok, self.lex = self.tokeniza()
@@ -481,12 +483,12 @@ class Analizador:
                         break
 
                 if self.lex != ")":
-                    self.print_error('Error de Sintaxis', 'Se esperaba ) y llego ' + self.lex, "")
+                    self.print_error('Error de Sintaxis', 'Se esperaba ) y llego ' + self.lex, ")")
                 self.tok, self.lex = self.tokeniza()
                 if self.lex == ";" or self.lex != "=":
                     return
             else:
-                self.print_error('Error de Sintaxis', 'Se esperaba ( y llego ' + self.lex, "")
+                self.print_error('Error de Sintaxis', 'Se esperaba ( y llego ' + self.lex, "(")
         
 
         if self.lex == "=":
@@ -495,7 +497,7 @@ class Analizador:
                 self.asignar_valor(nombres_de_variables[0])
                 return
             if self.lex != "(":
-                self.print_error('Error de Sintaxis', 'Se esperaba ( y llego ' + self.lex, "")
+                self.print_error('Error de Sintaxis', 'Se esperaba ( y llego ' + self.lex, "(")
             
             
             variable_actual = 0
@@ -511,7 +513,7 @@ class Analizador:
                     break
 
             if self.lex != ")":
-                self.print_error('Error de Sintaxis', 'Se esperaba ) y llego ' + self.lex, "")
+                self.print_error('Error de Sintaxis', 'Se esperaba ) y llego ' + self.lex, ")")
             self.tok, self.lex = self.tokeniza()
             return
         
@@ -628,7 +630,7 @@ class Analizador:
             if self.lex != ",":
                 break
         if self.lex != ")":
-            self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex, "")
+            self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex, ")")
         self.tok, self.lex = self.tokeniza()
 
 
@@ -636,7 +638,7 @@ class Analizador:
         self.tok, self.lex = self.tokeniza()
         self.expr()
         if self.lex != "]":
-            self.print_error('Error de Sintaxis', 'Se esperaba ] y llego '+ self.lex, "")
+            self.print_error('Error de Sintaxis', 'Se esperaba ] y llego '+ self.lex, "]")
         self.tok, self.lex = self.tokeniza()
 
 # Resolucion de expresiones, calcula el resultado de la expresion
@@ -647,7 +649,7 @@ class Analizador:
             self.tok, self.lex = self.tokeniza()
             self.expr()
             if self.lex != ')':
-                self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex, "")
+                self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex, ")")
             self.tok, self.lex = self.tokeniza()
         elif self.tok in ['Ent', 'Dec', 'CtA', 'CtL']:
             if self.tok in ['Ent', 'Dec', 'CtA']:
@@ -793,13 +795,13 @@ class Analizador:
 # Define un nuevo bloque donde poner estatutos y estructuras de control
     def block(self):
         if self.lex != "{":
-            self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "")
+            self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "{")
         self.tok, self.lex = self.tokeniza()
 
         if self.lex != "}": self.estatutos()
         if self.idx >= len(self.input):
             self.rows.append("")
-        if self.lex != "}": self.print_error("Error de Sintaxis", "Se esperaba FIN DE BLOQUE y llego " + self.lex , "")
+        if self.lex != "}": self.print_error("Error de Sintaxis", "Se esperaba FIN DE BLOQUE y llego " + self.lex, "}")
         self.tok, self.lex = self.tokeniza()
 
 # Analiza los estatutos de cada bloque
@@ -811,45 +813,35 @@ class Analizador:
 
             elif self.lex == "sea":
                 self.declaracion_variables()
-                if self.lex != ";" or self.contador_linea != linea_evaluada:
-                    if self.contador_linea != linea_evaluada:
-                        self.print_semicolon_newline_error(linea_evaluada)
-                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                if self.lex != ";":
+                    self.print_error('Error de Sintaxis',  'Se esperaba ; y llego '+ self.lex, ";")
                 self.tok, self.lex = self.tokeniza()
 
             elif self.lex == 'imprimeln!': 
                 self.imprimenl()
-                if self.lex != ";" or self.contador_linea != linea_evaluada:
-                    if self.contador_linea != linea_evaluada:
-                        self.print_semicolon_newline_error(linea_evaluada)
-                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                if self.lex != ";":
+                    self.print_error('Error de Sintaxis',  'Se esperaba ; y llego '+ self.lex, ";")
                 self.tok, self.lex = self.tokeniza()
             
             elif self.lex == 'imprimeln': 
                 self.imprimir_y_linea = True
                 self.imprimenl();
-                if self.lex != ";" or self.contador_linea != linea_evaluada:
-                    if self.contador_linea != linea_evaluada:
-                        self.print_semicolon_newline_error(linea_evaluada)
-                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                if self.lex != ";":
+                    self.print_error('Error de Sintaxis',  'Se esperaba ; y llego '+ self.lex, ";")
                 self.tok, self.lex = self.tokeniza()
                 self.imprimir_y_linea = False
             
             elif self.lex == 'lmp': 
                 self.insertar_codigo(self.contador_codigo, ['OPR', '0', '18'])
                 self.tok, self.lex = self.tokeniza()
-                if self.lex != ";" or self.contador_linea != linea_evaluada:
-                    if self.contador_linea != linea_evaluada:
-                        self.print_semicolon_newline_error(linea_evaluada)
-                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                if self.lex != ";":
+                    self.print_error('Error de Sintaxis',  'Se esperaba ; y llego '+ self.lex, ";")
                 self.tok, self.lex = self.tokeniza()
             
             elif self.lex == 'leer': 
                 self.leer()
-                if self.lex != ";" or self.contador_linea != linea_evaluada:
-                    if self.contador_linea != linea_evaluada:
-                        self.print_semicolon_newline_error(linea_evaluada)
-                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                if self.lex != ";":
+                    self.print_error('Error de Sintaxis',  'Se esperaba ; y llego '+ self.lex, ";")
                 self.tok, self.lex = self.tokeniza()
             
             elif self.tok == "Ide":
@@ -862,7 +854,7 @@ class Analizador:
                         self.tok, self.lex = self.tokeniza()
                         self.expr()
                         if self.lex != "]":
-                            self.print_error('Error de Sintaxis', 'se esperaba ] y llego '+ self.lex, "")
+                            self.print_error('Error de Sintaxis', 'se esperaba ] y llego '+ self.lex, "]")
                         self.tok, self.lex = self.tokeniza()
                         if self.tok != "[":
                             break
@@ -873,10 +865,8 @@ class Analizador:
                 elif self.lex == "=":
                     self.tok, self.lex = self.tokeniza()
                     self.asignar_valor(nombre_identificador)
-                if self.lex != ";" or self.contador_linea != linea_evaluada:
-                    if self.contador_linea != linea_evaluada:
-                        self.print_semicolon_newline_error(linea_evaluada)
-                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                if self.lex != ";":
+                    self.print_error('Error de Sintaxis',  'Se esperaba ; y llego '+ self.lex, ";")
                 self.tok, self.lex = self.tokeniza()
 
             elif self.lex == "si":
@@ -887,10 +877,8 @@ class Analizador:
             
             elif self.lex == "ciclo":
                 linea_evaluada = self.bucle_ciclo_mientras()
-                if self.lex != ";" or self.contador_linea != linea_evaluada:
-                    if self.contador_linea != linea_evaluada:
-                        self.print_semicolon_newline_error(linea_evaluada)
-                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                if self.lex != ";":
+                    self.print_error('Error de Sintaxis',  'Se esperaba ; y llego '+ self.lex, ";")
                 self.tok, self.lex = self.tokeniza()
             
             elif self.lex == "mientras":
@@ -901,10 +889,8 @@ class Analizador:
             
             elif self.lex == "regresa":
                 self.regresa()
-                if self.lex != ";" or self.contador_linea != linea_evaluada:
-                    if self.contador_linea != linea_evaluada:
-                        self.print_semicolon_newline_error(linea_evaluada)
-                    self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
+                if self.lex != ";":
+                    self.print_error('Error de Sintaxis',  'Se esperaba ; y llego '+ self.lex, ";")
                 self.tok, self.lex = self.tokeniza()
             
             elif self.idx >= len(self.input):
@@ -919,7 +905,7 @@ class Analizador:
     def imprimenl(self):
         self.tok, self.lex = self.tokeniza()
         if self.lex != '(':
-            self.print_error('Error de Sintaxis', 'Se esperaba ( y llego '+ self.lex, "")
+            self.print_error('Error de Sintaxis', 'Se esperaba ( y llego '+ self.lex, "(")
         self.tok, self.lex = self.tokeniza()
         if self.lex == ')':
             self.insertar_codigo(self.contador_codigo, ['LIT', '""', '0'])
@@ -935,7 +921,7 @@ class Analizador:
 
         if self.lex != ')': self.tok, self.lex = self.tokeniza()
         if self.lex != ')':
-            self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex, "")
+            self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex, ")")
         else:
             if self.imprimir_y_linea == False:
                 self.insertar_codigo(self.contador_codigo, ['OPR', '0', '21'])
@@ -948,7 +934,7 @@ class Analizador:
         self.tok, self.lex = self.tokeniza()
         nombre_identificador = ''
         if self.lex != '(':
-            self.print_error('Error de Sintaxis', 'Se esperaba ( y llego '+ self.lex, "")
+            self.print_error('Error de Sintaxis', 'Se esperaba ( y llego '+ self.lex, "(")
         self.tok, self.lex = self.tokeniza()
         if self.tok != 'Ide':
             self.print_error('Error de Sintaxis', 'Se esperaba Identificador y llego '+ self.lex, "Identificador")
@@ -960,7 +946,7 @@ class Analizador:
         if self.lex == ')':
             self.insertar_codigo(self.contador_codigo, ['OPR', nombre_identificador, '19'])
         else:
-            self.print_error('Error de Sintaxis', 'Se esperaba ")" y llego '+ self.lex, "")
+            self.print_error('Error de Sintaxis', 'Se esperaba ")" y llego '+ self.lex, ")")
         
         self.tok, self.lex = self.tokeniza()
 
@@ -975,7 +961,7 @@ class Analizador:
             else:
                 self.expr()
                 if self.lex != "]":
-                    self.print_error("Error de Sintaxis", "se esperaba ] y llego " + self.lex, "")
+                    self.print_error("Error de Sintaxis", "se esperaba ] y llego " + self.lex, "]")
             
 
             self.contador_dimension += 1
@@ -1005,7 +991,7 @@ class Analizador:
                 break
 
         if self.lex != "]":
-            self.print_error("Error de Sintaxis", "se esperaba ] y llego " + self.lex, "")
+            self.print_error("Error de Sintaxis", "se esperaba ] y llego " + self.lex, "]")
 
         self.tok, self.lex = self.tokeniza()
 
@@ -1063,7 +1049,7 @@ class Analizador:
                         if self.lex != "," :
                             break
                     if self.lex != "]":
-                        self.print_error('Error de Sintaxis', 'Se esperaba ] y llego '+ self.lex, "")
+                        self.print_error('Error de Sintaxis', 'Se esperaba ] y llego '+ self.lex, "]")
                     self.tok, self.lex = self.tokeniza()
                     if self.lex == "{":
                         self.block()
@@ -1093,7 +1079,7 @@ class Analizador:
                                 self.print_error('Error de Sintaxis', 'Se esperaba ENTERO y llego '+ self.lex, "ENTERO")
                         
                         if self.lex != "{":
-                            self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "") 
+                            self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "{") 
                         else: 
                             self.block()
 
@@ -1122,7 +1108,7 @@ class Analizador:
                                 self.print_error('Error de Sintaxis', 'Se esperaba ENTERO y llego '+ self.lex, "ENTERO")
                         
                         if self.lex != "{":
-                            self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "") 
+                            self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "{") 
                         else: 
                             self.block()
                 
@@ -1161,7 +1147,7 @@ class Analizador:
         
 
         if self.lex != "{":
-            self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "")
+            self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "{")
         
         self.insertar_tabla_simbolos(etiqueta_y, ['I', 'I', str(self.contador_codigo), 0])
         self.block()
