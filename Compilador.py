@@ -31,29 +31,30 @@ class Analizador:
     sym = ["#", "$", "¿", "?", "¡", "|", "`", "~", "\\", "@", "&"]
     #matriz de transicion
     matran = [
-        [  1,   1,  21,   2,   7,   8,  10,  12,  16,  20,  18,  14,  21,   5],  # 0
-        [  1,   1, ACP,   1, ACP, ACP,   1, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 1
-        [ACP, ACP,   3,   2, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 2
-        [ERR, ERR, ERR,   4, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR],  # 3
-        [ACP, ACP, ACP,   4, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 4
-        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP,   6],  # 5
-        [  6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6],  # 6
-        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 7
-        [ERR, ERR, ERR, ERR, ERR,   9, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR],  # 8
-        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 9
-        [ACP, ACP, ACP, ACP, ACP, ACP, ACP,  11, ACP, ACP, ACP, ACP, ACP, ACP],  # 10
-        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 11
-        [ACP, ACP, ACP, ACP, ACP, ACP, ACP,  13, ACP, ACP, ACP, ACP, ACP, ACP],  # 12
-        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 13
-        [ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR,  15, ERR, ERR],  # 14
-        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 15
-        [ 16,  16,  16,  16,  16,  16,  16,  16,  17,  16,  16,  16,  16,  16],  # 16
-        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 17
-        [ACP, ACP, ACP, ACP, ACP, ACP, ACP,  19, ACP, ACP, ACP, ACP, ACP, ACP],  # 18
-        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 19
-        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 20
-        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 21
-        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 22
+        [  1,   1,  22,   2,   7,   8,  10,  12,  16,  20,  18,  14,  21,   5],  # 0 nl, tab, space state
+        [  1,   1, ACP,   1, ACP, ACP,   1, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 1 identifier name state
+        [ACP, ACP,   3,   2, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 2 int state
+        [ERR, ERR, ERR,   4, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR],  # 3 int. state
+        [ACP, ACP, ACP,   4, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 4 decimal state
+        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP,   6],  # 5 division operator state
+        [  6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6],  # 6 comment state
+        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 7 math operators state
+        [ERR, ERR, ERR, ERR, ERR,   9, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR],  # 8 & sym state
+        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 9 &&(and) state
+        [ACP, ACP, ACP, ACP, ACP, ACP, ACP,  11, ACP, ACP, ACP, ACP, ACP, ACP],  # 10 ! (negation) state
+        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 11 != (not equal) state
+        [ACP, ACP, ACP, ACP, ACP, ACP, ACP,  13, ACP, ACP, ACP, ACP, ACP, ACP],  # 12 = (assignation) state
+        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 13 == (equality) state
+        [ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR,  15, ERR, ERR],  # 14 | sym state
+        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 15 || (or) state
+        [ 16,  16,  16,  16,  16,  16,  16,  16,  17,  16,  16,  16,  16,  16],  # 16 string initial state "words
+        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 17 string closure state "
+        [ACP, ACP, ACP, ACP, ACP, ACP, ACP,  19, ACP, ACP, ACP, ACP, ACP, ACP],  # 18 greater than/ lower than state
+        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 19 greater or equal than/ lower or equal than state
+        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 20 delimiters state
+        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 21 symbols state
+        [ERR, ERR,  23, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR],  # 22 . sym state
+        [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 23 .. (range) state
     ]
     tok = ""
     lex = ""
@@ -210,11 +211,6 @@ class Analizador:
                     estado = 2
                     break
 
-                
-                
-                
-
-
                 #(el estado 6 es el de comentarios)
                 if estado == 6:
                     lex += caracter
@@ -302,8 +298,10 @@ class Analizador:
                 tok = "CtA"
             elif estAnt == 20:
                 tok = "Del"
-            elif estAnt == 21 or estAnt == 14 or estAnt == 8:
+            elif estAnt == 21 or estAnt == 14 or estAnt == 8 or estAnt == 22:
                 tok = "Sym"
+            elif estAnt == 23:
+                tok = "Ran"
             else:
                 tok = "NtK"
 
