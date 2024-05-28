@@ -120,8 +120,8 @@ class Analizador:
             highlight += "^"
             i += 1
 
-        #el 4 por los [], el 2 por los espacios y el -1 porque cuando tokenizas te detienes en el siguiente idx
-        sangria = self.contador_columna + len(str(self.contador_linea)) + len(str(self.contador_columna)) + 4 + 2 
+        #el 4 por los [], el 2 por los espacios 
+        sangria = self.contador_columna + len(str(self.contador_linea)) + len(str(self.contador_columna)) + 4 + 2
 
         print(highlight.rjust(sangria) + "\x1b[0m")
 
@@ -208,6 +208,7 @@ class Analizador:
                 if caracter == "." and estado == 3:
                     lex = lex[0:-1]
                     self.idx -= 1
+                    self.contador_columna -= 1
                     estado = 2
                     break
 
@@ -266,7 +267,7 @@ class Analizador:
 
             if estado != self.ACP and estado != self.ERR: estAnt = estado
 
-            if estado == 3:
+            if estAnt == 3:
                 self.print_error("Error Lexico", lex + " decimal incompleto" , "")
             elif estAnt == 16:
                 self.print_error('Error Lexico', 'Cte Alfabetica SIN cerrar '+lex, "")
@@ -340,6 +341,8 @@ class Analizador:
                 self.funciones()
             elif self.idx >= len(self.input):
                 break
+            elif self.lex == ";":
+                self.tok, self.lex = self.tokeniza()
             else:
                 self.print_error('Error de Sintaxis', 'Lexema inesperado ' + self.lex, "")
 
@@ -903,8 +906,11 @@ class Analizador:
                         self.print_semicolon_newline_error(linea_evaluada)
                     self.print_error('Error de Sintaxis',  'Se esperaba ;', ";")
                 self.tok, self.lex = self.tokeniza()
+            
             elif self.idx >= len(self.input):
                 break
+            elif self.lex == ";":
+                self.tok, self.lex = self.tokeniza()
             else:
                 self.print_error('Error de Sintaxis', 'Lexema inesperado ' + self.lex, "")
 
