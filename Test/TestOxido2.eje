@@ -12,17 +12,17 @@ bPrimo,V,I,0,0,#,
 nom,V,A,0,0,#,
 _E1,I,I,47,0,#,
 _E2,I,I,55,0,#,
-_E4,I,I,76,0,#,
-_E5,I,I,93,0,#,
-_E6,I,I,125,0,#,
-_E7,I,I,119,0,#,
-_principal,F,I,126,0,#,
+_E4,I,I,78,0,#,
+_E5,I,I,97,0,#,
+_E6,I,I,129,0,#,
+_E7,I,I,123,0,#,
+_principal,F,I,130,0,#,
 _P,I,I,1,0,#,
-_E8,I,I,138,0,#,
-_E9,I,I,149,0,#,
-_E10,I,I,160,0,#,
-_E12,I,I,165,0,#,
-_E13,I,I,167,0,#,
+_E8,I,I,142,0,#,
+_E9,I,I,153,0,#,
+_E10,I,I,164,0,#,
+_E12,I,I,169,0,#,
+_E13,I,I,171,0,#,
 @
 1 LIT 10, 0
 2 LOD MAX, 0
@@ -78,125 +78,129 @@ _E13,I,I,167,0,#,
 52 CAL _E2, 0
 53 LOD facrec, 0
 54 OPR 0, 4
-55 LOD MAX, 0
-56 LIT 1, 0
-57 OPR 0, 3
-58 LOD i, 0
-59 LIT 1, 0
-60 OPR 0, 2
-61 LOD i, 0
-62 LOD vec, 0
-63 LOD j, 0
+55 LIT 0, 0
+56 LOD MAX, 0
+57 LIT 1, 0
+58 OPR 0, 3
+59 LOD i, 0
+60 LIT 1, 0
+61 OPR 0, 2
+62 LOD MAX, 0
+63 LOD i, 0
 64 LOD vec, 0
-65 OPR 0, 10
-66 JMC F, _E4
-67 LOD i, 0
-68 LOD vec, 0
+65 LOD j, 0
+66 LOD vec, 0
+67 OPR 0, 10
+68 JMC F, _E4
 69 LOD i, 0
-70 LOD j, 0
-71 LOD vec, 0
-72 STO 0, vec
-73 LOD j, 0
-74 LOD tmp, 0
-75 STO 0, vec
-76 LIT "[", 0
-77 OPR 0, 20
-78 LOD i, 0
-79 LOD vec, 0
-80 OPR 0, 20
-81 LIT " ", 0
-82 OPR 0, 20
-83 LIT "]", 0
-84 OPR 0, 21
-85 LIT 1, 0
-86 LOD n, 0
-87 LOD i, 0
-88 OPR 0, 6
-89 LIT 0, 0
-90 OPR 0, 14
-91 JMC F, _E5
-92 LIT F, 0
-93 LOD i, 0
-94 LIT 1, 0
-95 OPR 0, 2
-96 LOD i, 0
-97 LOD n, 0
-98 OPR 0, 9
-99 LIT V, 0
-100 LIT "Dame num: ", 0
-101 OPR 0, 20
-102 OPR num, 19
-103 LOD num, 0
-104 LIT 0, 0
-105 OPR 0, 14
-106 LOD num, 0
-107 LIT 1, 0
-108 OPR 0, 14
-109 OPR 0, 16
-110 JMC F, _E6
-111 LOD num, 0
-112 LIT 0, 0
-113 LIT 1, 0
-114 LOD num, 0
-115 LIT 1, 0
-116 OPR 0, 10
-117 JMC F, _E6
-118 JMP 0, _E7
-119 LOD fibo, 0
-120 LOD fiba, 0
-121 LOD fibo, 0
-122 OPR 0, 2
-123 LOD tmp, 0
-124 JMP 0, 114
+70 LOD vec, 0
+71 LOD i, 0
+72 LOD j, 0
+73 LOD vec, 0
+74 STO 0, vec
+75 LOD j, 0
+76 LOD tmp, 0
+77 STO 0, vec
+78 LIT "[", 0
+79 OPR 0, 20
+80 LIT 0, 0
+81 LOD MAX, 0
+82 LOD i, 0
+83 LOD vec, 0
+84 OPR 0, 20
+85 LIT " ", 0
+86 OPR 0, 20
+87 LIT "]", 0
+88 OPR 0, 21
+89 LIT 1, 0
+90 LOD n, 0
+91 LOD i, 0
+92 OPR 0, 6
+93 LIT 0, 0
+94 OPR 0, 14
+95 JMC F, _E5
+96 LIT F, 0
+97 LOD i, 0
+98 LIT 1, 0
+99 OPR 0, 2
+100 LOD i, 0
+101 LOD n, 0
+102 OPR 0, 9
+103 LIT V, 0
+104 LIT "Dame num: ", 0
+105 OPR 0, 20
+106 OPR num, 19
+107 LOD num, 0
+108 LIT 0, 0
+109 OPR 0, 14
+110 LOD num, 0
+111 LIT 1, 0
+112 OPR 0, 14
+113 OPR 0, 16
+114 JMC F, _E6
+115 LOD num, 0
+116 LIT 0, 0
+117 LIT 1, 0
+118 LOD num, 0
+119 LIT 1, 0
+120 OPR 0, 10
+121 JMC F, _E6
+122 JMP 0, _E7
+123 LOD fibo, 0
+124 LOD fiba, 0
 125 LOD fibo, 0
-126 LIT "Dame num: ", 0
-127 OPR 0, 20
-128 OPR num, 19
-129 LIT "Factorial(", 0
-130 OPR 0, 20
-131 LOD num, 0
-132 OPR 0, 20
-133 LIT ")=", 0
+126 OPR 0, 2
+127 LOD tmp, 0
+128 JMP 0, 118
+129 LOD fibo, 0
+130 LIT "Dame num: ", 0
+131 OPR 0, 20
+132 OPR num, 19
+133 LIT "Factorial(", 0
 134 OPR 0, 20
-135 LOD _E8, 0
-136 LOD num, 0
-137 CAL _E8, 0
-138 LOD facrec, 0
-139 OPR 0, 21
-140 LIT "Fibonacci(", 0
-141 OPR 0, 20
-142 LOD num, 0
-143 OPR 0, 20
-144 LIT ")=", 0
+135 LOD num, 0
+136 OPR 0, 20
+137 LIT ")=", 0
+138 OPR 0, 20
+139 LOD _E8, 0
+140 LOD num, 0
+141 CAL _E8, 0
+142 LOD facrec, 0
+143 OPR 0, 21
+144 LIT "Fibonacci(", 0
 145 OPR 0, 20
-146 LOD _E9, 0
-147 LOD num, 0
-148 CAL _E9, 0
-149 LOD fibonacci, 0
-150 OPR 0, 21
-151 LIT "Dame num: ", 0
-152 OPR 0, 20
-153 OPR num, 19
-154 LIT 2, 0
-155 LOD num, 0
+146 LOD num, 0
+147 OPR 0, 20
+148 LIT ")=", 0
+149 OPR 0, 20
+150 LOD _E9, 0
+151 LOD num, 0
+152 CAL _E9, 0
+153 LOD fibonacci, 0
+154 OPR 0, 21
+155 LIT "Dame num: ", 0
 156 OPR 0, 20
-157 LOD _E10, 0
-158 LOD num, 0
-159 CAL _E10, 0
-160 LOD esPrimo, 0
-161 JMC F, _E12
-162 LIT " es PRIMO", 0
-163 OPR 0, 21
-164 JMP 0, _E13
-165 LIT " NO es PRIMO", 0
-166 OPR 0, 21
-167 LIT "Como te llamas ? ", 0
-168 OPR 0, 20
-169 OPR nom, 19
-170 LIT "Felicidades ", 0
-171 OPR 0, 20
-172 LOD nom, 0
-173 OPR 0, 20
-174 LIT " ya PASASTE Compiladores", 0
-175 OPR 0, 21
-176 OPR 0, 0
+157 OPR num, 19
+158 LIT 2, 0
+159 LOD num, 0
+160 OPR 0, 20
+161 LOD _E10, 0
+162 LOD num, 0
+163 CAL _E10, 0
+164 LOD esPrimo, 0
+165 JMC F, _E12
+166 LIT " es PRIMO", 0
+167 OPR 0, 21
+168 JMP 0, _E13
+169 LIT " NO es PRIMO", 0
+170 OPR 0, 21
+171 LIT "Como te llamas ? ", 0
+172 OPR 0, 20
+173 OPR nom, 19
+174 LIT "Felicidades ", 0
+175 OPR 0, 20
+176 LOD nom, 0
+177 OPR 0, 20
+178 LIT " ya PASASTE Compiladores", 0
+179 OPR 0, 21
+180 OPR 0, 0
