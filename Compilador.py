@@ -1053,6 +1053,7 @@ class Analizador:
             self.tok, self.lex = self.tokeniza()
             if self.lex == "en":
                 self.tok, self.lex = self.tokeniza()
+
                 if self.lex == "[":
                     while True:
                         self.tok, self.lex = self.tokeniza()
@@ -1066,66 +1067,65 @@ class Analizador:
                     self.tok, self.lex = self.tokeniza()
                     if self.lex == "{":
                         self.block()
+
                 elif self.tok == "Ent":
                     self.tok, self.lex = self.tokeniza()
-                    if self.lex == ".":
+                    if self.tok == "Ran":
                         self.tok, self.lex = self.tokeniza()
-                        if self.lex == ".":
+                        if self.lex == "=":
                             self.tok, self.lex = self.tokeniza()
-                            if self.lex == "=":
+                            if self.tok == "Ent":
                                 self.tok, self.lex = self.tokeniza()
-                                if self.tok == "Ent":
-                                    self.tok, self.lex = self.tokeniza()
-                                elif self.tok == "Ide":
-                                    self.tok, self.lex = self.tokeniza()
-                                elif self.lex == "(":
-                                    self.expr()
-                                else:
-                                    self.print_error('Error de Sintaxis', 'Se esperaba ENTERO y llego '+ self.lex, "ENTERO") 
+                            elif self.tok == "Ide":
+                                self.tok, self.lex = self.tokeniza()
+                            elif self.lex == "(":
+                                self.expr()
                             else:
-                                if self.tok == "Ent":
-                                    self.tok, self.lex = self.tokeniza()
-                                elif self.tok == "Ide":
-                                    self.tok, self.lex = self.tokeniza()
-                                elif self.lex == '(':
-                                    self.expr()
-                                else:
-                                    self.print_error('Error de Sintaxis', 'Se esperaba ENTERO y llego '+ self.lex, "ENTERO")
-                            
-                            if self.lex != "{":
-                                self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "") 
-                            else: 
-                                self.block()
+                                self.print_error('Error de Sintaxis', 'Se esperaba ENTERO y llego '+ self.lex, "ENTERO") 
+                        else:
+                            if self.tok == "Ent":
+                                self.tok, self.lex = self.tokeniza()
+                            elif self.tok == "Ide":
+                                self.tok, self.lex = self.tokeniza()
+                            elif self.lex == '(':
+                                self.expr()
+                            else:
+                                self.print_error('Error de Sintaxis', 'Se esperaba ENTERO y llego '+ self.lex, "ENTERO")
+                        
+                        if self.lex != "{":
+                            self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "") 
+                        else: 
+                            self.block()
+
                 elif self.lex == "(":
                     self.expr()
-                    if self.lex == ".":
+                    if self.tok == "Ran":
                         self.tok, self.lex = self.tokeniza()
-                        if self.lex == ".":
+                        if self.lex == "=":
                             self.tok, self.lex = self.tokeniza()
-                            if self.lex == "=":
+                            if self.tok == "Ent":
                                 self.tok, self.lex = self.tokeniza()
-                                if self.tok == "Ent":
-                                    self.tok, self.lex = self.tokeniza()
-                                elif self.tok == "Ide":
-                                    self.tok, self.lex = self.tokeniza()
-                                elif self.lex == "(":
-                                    self.expr()
-                                else:
-                                    self.print_error('Error de Sintaxis', 'Se esperaba ENTERO y llego '+ self.lex, "ENTERO")
+                            elif self.tok == "Ide":
+                                self.tok, self.lex = self.tokeniza()
+                            elif self.lex == "(":
+                                self.expr()
                             else:
-                                if self.tok == "Ent":
-                                    self.tok, self.lex = self.tokeniza()
-                                elif self.tok == "Ide":
-                                    self.tok, self.lex = self.tokeniza()
-                                elif self.lex == '(':
-                                    self.expr()
-                                else:
-                                    self.print_error('Error de Sintaxis', 'Se esperaba ENTERO y llego '+ self.lex, "ENTERO")
-                            
-                            if self.lex != "{":
-                                self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "") 
-                            else: 
-                                self.block()
+                                self.print_error('Error de Sintaxis', 'Se esperaba ENTERO y llego '+ self.lex, "ENTERO")
+                        else:
+                            if self.tok == "Ent":
+                                self.tok, self.lex = self.tokeniza()
+                            elif self.tok == "Ide":
+                                self.tok, self.lex = self.tokeniza()
+                            elif self.lex == '(':
+                                self.expr()
+                            else:
+                                self.print_error('Error de Sintaxis', 'Se esperaba ENTERO y llego '+ self.lex, "ENTERO")
+                        
+                        if self.lex != "{":
+                            self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "") 
+                        else: 
+                            self.block()
+                
                 else:
                     self.print_error('Error de Sintaxis', 'Se esperaba RANGO O ARREGO y llego '+ self.lex, "RANGO O ARREGO") 
 
