@@ -1128,6 +1128,9 @@ class Analizador:
     def sentencia_si(self):
         self.tok, self.lex = self.tokeniza()
         self.expr()
+        tipo_de_resultado_expr = self.pila_de_tipos.pop()
+        if tipo_de_resultado_expr != "L":
+            self.print_error("Error de Semantica", "Se esperaba tipo Logico en la expresion si y llego " + tipo_de_resultado_expr, "no_highlight")
 
         self.contador_etiquetas += 1
         numero_de_etiqueta = str(self.contador_etiquetas)
@@ -1214,6 +1217,10 @@ class Analizador:
         direccion1 = self.contador_codigo
 
         self.expr()
+        tipo_de_resultado_expr = self.pila_de_tipos.pop()
+        if tipo_de_resultado_expr != "L":
+            self.print_error("Error de Semantica", "Se esperaba tipo Logico en el bucle mientras y llego " + tipo_de_resultado_expr, "no_highlight")
+
         numero_etiqueta = "_E" + numero_etiqueta
         etiqueta_x = numero_etiqueta
         self.insertar_codigo(self.contador_codigo, ["JMC", "F", etiqueta_x])

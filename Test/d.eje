@@ -13,6 +13,9 @@ vac,C,E,1,0,#,
 _principal,F,I,57,0,#,
 _P,I,I,1,0,#,
 _E1,I,I,69,0,#,
+_E2,I,I,86,0,#,
+_E3,I,I,93,0,#,
+_E4,I,I,92,0,#,
 @
 1 LIT 0, 0
 2 LIT 33, 0
@@ -89,4 +92,21 @@ _E1,I,I,69,0,#,
 73 LOD j, 0
 74 LOD a, 0
 75 OPR 0, 9
-76 OPR 0, 0
+76 LOD a, 0
+77 LIT 0, 0
+78 OPR 0, 14
+79 LOD a, 0
+80 LIT 1, 0
+81 OPR 0, 14
+82 OPR 0, 15
+83 JMC F, _E2
+84 LOD b, 0
+85 JMP 0, _E3
+86 LOD b, 0
+87 LIT 1, 0
+88 OPR 0, 4
+89 LIT F, 0
+90 JMC F, _E3
+91 JMP 0, _E4
+92 JMP 0, 89
+93 OPR 0, 0

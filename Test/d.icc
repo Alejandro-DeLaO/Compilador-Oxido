@@ -16,4 +16,14 @@ fn principal() {
       }
       j = j + 1;
    } mientras j < a;
+
+   si a == 0 y a == 1 {
+      regresa b;
+   }
+   sino {
+      regresa b * 1;
+   }
+
+   mientras a > 1 {
+   }
 }
