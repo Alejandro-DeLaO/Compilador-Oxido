@@ -56,6 +56,27 @@ class Analizador:
         [ERR, ERR,  23, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR, ERR],  # 22 . sym state
         [ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP, ACP],  # 23 .. (range) state
     ]
+
+    #Tipos permitidos la forma del diccionario es la siguiente
+    #Expresion evaluada : tipo resultante de la evaluacion
+    tipos={ 
+    'A=A': '', 'E=E': '', 'D=E': '', 'D=D': '', 'L=L': '',
+    'E+E':'E', 'E+D':'D', 'D+E':'D', 'D+D':'D', 'A+A':'A',
+    'E-E':'E', 'E-D':'D', 'D-E':'D', 'D-D':'D', 
+    'E*E':'E', 'E*D':'D', 'D*E':'D', 'D*D':'D',
+    'E/E':'D', 'E/D':'D', 'D/E':'D', 'D/D':'D',
+    'E%E':'E', '-E' :'E', '-D' :'D',
+    'L&&L':'L', 'LyL':'L', 'L||L':'L', 'LoL':'L', '!L'  :'L',
+    'E>E' :'L', 'R>E' :'L', 'E>R' :'L', 'R>R' :'L',
+    'E<E' :'L', 'R<E' :'L', 'E<R' :'L', 'R<R' :'L',
+    'E>=E':'L', 'R>=E':'L', 'E>=R':'L', 'R>=R':'L',
+    'E<=E':'L', 'R<=E':'L', 'E<=R':'L', 'R<=R':'L',
+    'E!=E':'L', 'R!=E':'L', 'E!=R':'L', 'R!=R':'L', 'A!=A':'L',
+    'E==E':'L', 'R==E':'L', 'E==R':'L', 'R==R':'L', 'A==A':'L'
+    }
+    pila_de_tipos=[]
+    pila_de_operadores=[]
+
     tok = ""
     lex = ""
     dim1 = 0
@@ -100,6 +121,9 @@ class Analizador:
         print("\033[1;31m"+type, message + "\x1b[0m")
         if helper == "only_message":
             pass
+        if helper == "no_highlight":
+            print("\033[1;31m" + "\n[" + str(self.contador_linea) + "]" + " [" + str(self.contador_columna) + "] \x1b[0m", end="")
+            print(self.rows[self.contador_linea-1])
         elif helper != "":
             numero_de_linea_del_lexema = self.previous_lex[1]
             #restamos 1 porque la linea inicia en 1 y los arreglos en 0
@@ -644,13 +668,13 @@ class Analizador:
 # Resolucion de expresiones, calcula el resultado de la expresion
     def termino(self):
         nombre_identificador = ""
-        is_function = False
         if self.lex == '(':
             self.tok, self.lex = self.tokeniza()
             self.expr()
             if self.lex != ')':
                 self.print_error('Error de Sintaxis', 'Se esperaba ) y llego '+ self.lex, ")")
             self.tok, self.lex = self.tokeniza()
+
         elif self.tok in ['Ent', 'Dec', 'CtA', 'CtL']:
             if self.tok in ['Ent', 'Dec', 'CtA']:
                 self.insertar_codigo(self.contador_codigo, ['LIT', self.lex, '0'])
@@ -658,9 +682,22 @@ class Analizador:
                 self.insertar_codigo(self.contador_codigo, ['LIT', 'V', '0'])
             elif self.lex == 'falso':
                 self.insertar_codigo(self.contador_codigo, ['LIT', 'F', '0'])
+            
+            if self.tok == "Ent": self.pila_de_tipos.append('E')
+            elif self.tok == "Dec": self.pila_de_tipos.append('D')
+            elif self.tok == "CtA": self.pila_de_tipos.append('A')
+            elif self.tok == "CtL": self.pila_de_tipos.append('L')
+            
             self.tok, self.lex = self.tokeniza()
+
         elif self.tok == 'Ide':
             nombre_identificador = self.lex
+
+            if nombre_identificador not in self.tab_sim:
+                self.print_error('Error de Semantica', 'El identificador '+ nombre_identificador + ' no ha sido declarado', "")
+            informacion_del_identificador = self.obtener_simbolo(nombre_identificador)
+            self.pila_de_tipos.append(informacion_del_identificador[1])
+
             self.tok, self.lex = self.tokeniza()
             if self.lex == "(":
                 etiqueta_x = "_E" + str(self.contador_etiquetas)
@@ -686,6 +723,12 @@ class Analizador:
         self.termino()
         
         if operador == "-":
+            operacion_expresada_en_tipos = self.pila_de_tipos.pop()
+            operacion_expresada_en_tipos = operador + operacion_expresada_en_tipos
+            if operacion_expresada_en_tipos not in self.tipos:
+                self.print_error('Error de Semantica', "Conflicto de tipos en la operacion " + operacion_expresada_en_tipos, "no_highlight")
+            self.pila_de_tipos.append(self.tipos[operacion_expresada_en_tipos])
+            
             self.insertar_codigo(self.contador_codigo, ["OPR", "0", "8"])
 
     def operador_multiplicar(self):
@@ -696,6 +739,14 @@ class Analizador:
                 self.tok, self.lex = self.tokeniza()
 
             self.operador_menos_unitario()
+
+            if operador in ["*", "/", "%"]:
+                operacion_expresada_en_tipos = self.pila_de_tipos.pop()
+                tipo_izquierda =  self.pila_de_tipos.pop()
+                operacion_expresada_en_tipos = tipo_izquierda + operador + operacion_expresada_en_tipos
+                if operacion_expresada_en_tipos not in self.tipos:
+                    self.print_error('Error de Semantica', "Conflicto de tipos en la operacion " + operacion_expresada_en_tipos, "no_highlight")
+                self.pila_de_tipos.append(self.tipos[operacion_expresada_en_tipos])
 
             if operador == "*":
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "4"])
@@ -716,9 +767,15 @@ class Analizador:
             if (self.lex == "+" or self.lex == "-") and bin:
                 operador = self.lex
                 self.tok, self.lex = self.tokeniza()
-                if self.lex != "(" and self.tok != "Ide" and self.tok not in ['Ent', 'Dec', 'CtA', 'CtL']:
-                    if self.lex != "]": self.print_error('Error de Sintaxis', 'Se esperaba termino y llego '+ self.lex, "termino")
             self.operador_multiplicar()
+
+            if operador in ["+", "-"]:
+                operacion_expresada_en_tipos = self.pila_de_tipos.pop()
+                tipo_izquierda =  self.pila_de_tipos.pop()
+                operacion_expresada_en_tipos = tipo_izquierda + operador + operacion_expresada_en_tipos
+                if operacion_expresada_en_tipos not in self.tipos:
+                    self.print_error('Error de Semantica', "Conflicto de tipos en la operacion " + operacion_expresada_en_tipos, "no_highlight")
+                self.pila_de_tipos.append(self.tipos[operacion_expresada_en_tipos])
 
             if operador == "+":
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "2"])
@@ -738,6 +795,14 @@ class Analizador:
             operador = self.lex
             self.tok, self.lex = self.tokeniza()
             self.operador_suma()
+            if operador in ["<", ">", "<=", ">=", "!=", "=="]:
+                operacion_expresada_en_tipos = self.pila_de_tipos.pop()
+                tipo_izquierda =  self.pila_de_tipos.pop()
+                operacion_expresada_en_tipos = tipo_izquierda + operador + operacion_expresada_en_tipos
+                if operacion_expresada_en_tipos not in self.tipos:
+                    self.print_error('Error de Semantica', "Conflicto de tipos en la operacion " + operacion_expresada_en_tipos, "no_highlight")
+                self.pila_de_tipos.append(self.tipos[operacion_expresada_en_tipos])
+
 
             if operador == "<":
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "9"])
@@ -760,6 +825,12 @@ class Analizador:
         self.operador_relacional()
 
         if operador == "!":
+            operacion_expresada_en_tipos = self.pila_de_tipos.pop()
+            operacion_expresada_en_tipos = operador + operacion_expresada_en_tipos
+            if operacion_expresada_en_tipos not in self.tipos:
+                self.print_error('Error de Semantica', "Conflicto de tipos en la operacion " + operacion_expresada_en_tipos, "no_highlight")
+            self.pila_de_tipos.append(self.tipos[operacion_expresada_en_tipos])
+
             self.insertar_codigo(self.contador_codigo, ["OPR", "0", "17"])
 
     def operador_and(self):
@@ -771,6 +842,13 @@ class Analizador:
             self.operador_not()
 
             if operador == "&&" or operador == "y": 
+                operacion_expresada_en_tipos = self.pila_de_tipos.pop()
+                tipo_izquierda =  self.pila_de_tipos.pop()
+                operacion_expresada_en_tipos = tipo_izquierda + operador + operacion_expresada_en_tipos
+                if operacion_expresada_en_tipos not in self.tipos:
+                    self.print_error('Error de Semantica', "Conflicto de tipos en la operacion " + operacion_expresada_en_tipos, "no_highlight")
+                self.pila_de_tipos.append(self.tipos[operacion_expresada_en_tipos])
+
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "15"])
 
             if self.lex != "&&" and self.lex != "y":
@@ -785,6 +863,13 @@ class Analizador:
                 self.tok, self.lex = self.tokeniza()
             self.operador_and()
             if operador == "||" or operador == "o":
+                operacion_expresada_en_tipos = self.pila_de_tipos.pop()
+                tipo_izquierda =  self.pila_de_tipos.pop()
+                operacion_expresada_en_tipos = tipo_izquierda + operador + operacion_expresada_en_tipos
+                if operacion_expresada_en_tipos not in self.tipos:
+                    self.print_error('Error de Semantica', "Conflicto de tipos en la operacion " + operacion_expresada_en_tipos, "no_highlight")
+                self.pila_de_tipos.append(self.tipos[operacion_expresada_en_tipos])
+
                 self.insertar_codigo(self.contador_codigo, ['OPR', "0", "16"])
 
             #esto es para simular el do while

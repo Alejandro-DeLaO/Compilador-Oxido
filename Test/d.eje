@@ -1,16 +1,17 @@
-MAX_,C,E,0,0,#,
+MAX,C,E,0,0,#,
 vec,V,E,],0,#,
 a,V,E,0,0,#,
 b,V,E,0,0,#,
 c,C,E,0,0,#,
 t,V,I,],0,#,
 p,V,I,],0,#,
-j,V,I,0,0,#,
+j,V,E,0,0,#,
 _principal,F,I,52,0,#,
 _P,I,I,1,0,#,
+_E1,I,I,62,0,#,
 @
 1 LIT 10, 0
-2 LOD MAX_, 0
+2 LOD MAX, 0
 3 LIT 0, 0
 4 LIT 33, 0
 5 STO 0, vec
@@ -60,4 +61,20 @@ _P,I,I,1,0,#,
 49 LIT 233232, 0
 50 STO 0, p
 51 LIT 2, 0
-52 OPR 0, 0
+52 LIT V, 0
+53 LIT V, 0
+54 OPR 0, 16
+55 LOD a, 0
+56 LOD j, 0
+57 OPR 0, 6
+58 LIT 0, 0
+59 OPR 0, 14
+60 JMC F, _E1
+61 LIT F, 0
+62 LOD j, 0
+63 LIT 1, 0
+64 OPR 0, 2
+65 LOD j, 0
+66 LOD a, 0
+67 OPR 0, 9
+68 OPR 0, 0
