@@ -1226,11 +1226,21 @@ class Analizador:
 
     def bucle_ciclo_mientras(self):
         self.tok, self.lex = self.tokeniza()
+        direccion_inicio_bloque = self.contador_codigo
+        etiqueta_de_inicio = "_E"+str(self.contador_etiquetas)
+        self.contador_etiquetas += 1
+
+        self.insertar_tabla_simbolos(etiqueta_de_inicio, ['I', 'I',str(direccion_inicio_bloque), 0])
+
         self.block()
         if self.lex != "mientras":
             self.print_error('Error de Sintaxis', 'Se esperaba MIENTRAS y llego '+ self.lex, "MIENTRAS") 
         self.tok, self.lex = self.tokeniza()
         self.expr()
+        tipo_de_resultado_expr = self.pila_de_tipos.pop()
+        if tipo_de_resultado_expr != "L":
+            self.print_error("Error de Semantica", "Se esperaba tipo Logico en el bucle mientras y llego " + tipo_de_resultado_expr, "no_highlight")
+        self.insertar_codigo(self.contador_codigo, ["JMC", "V", etiqueta_de_inicio])
 
     def bucle_mientras(self):
 

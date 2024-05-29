@@ -13,9 +13,10 @@ nom,V,A,0,0,#,
 _principal,F,I,38,0,#,
 _P,I,I,1,0,#,
 _E0,I,I,67,0,#,
-_E1,I,I,88,0,#,
-_E2,I,I,102,0,#,
-_E3,I,I,104,0,#,
+_E1,I,I,80,0,#,
+_E2,I,I,88,0,#,
+_E3,I,I,103,0,#,
+_E4,I,I,105,0,#,
 @
 1 LIT 10, 0
 2 STO 0, MAX
@@ -101,7 +102,7 @@ _E3,I,I,104,0,#,
 82 OPR 0, 6
 83 LIT 0, 0
 84 OPR 0, 14
-85 JMC F, _E1
+85 JMC F, _E2
 86 LIT F, 0
 87 STO 0, bPrimo
 88 LOD i, 0
@@ -111,22 +112,23 @@ _E3,I,I,104,0,#,
 92 LOD i, 0
 93 LOD num, 0
 94 OPR 0, 9
-95 LOD num, 0
-96 OPR 0, 20
-97 LOD bPrimo, 0
-98 JMC F, _E2
-99 LIT " es PRIMO", 0
-100 OPR 0, 21
-101 JMP 0, _E3
-102 LIT " NO es PRIMO", 0
-103 OPR 0, 21
-104 LIT "Como te llamas ? ", 0
-105 OPR 0, 20
-106 OPR nom, 19
-107 LIT "Felicidades ", 0
-108 OPR 0, 20
-109 LOD nom, 0
-110 OPR 0, 20
-111 LIT " ya PASASTE Compiladoes", 0
-112 OPR 0, 21
-113 OPR 0, 0
+95 JMC V, _E1
+96 LOD num, 0
+97 OPR 0, 20
+98 LOD bPrimo, 0
+99 JMC F, _E3
+100 LIT " es PRIMO", 0
+101 OPR 0, 21
+102 JMP 0, _E4
+103 LIT " NO es PRIMO", 0
+104 OPR 0, 21
+105 LIT "Como te llamas ? ", 0
+106 OPR 0, 20
+107 OPR nom, 19
+108 LIT "Felicidades ", 0
+109 OPR 0, 20
+110 LOD nom, 0
+111 OPR 0, 20
+112 LIT " ya PASASTE Compiladoes", 0
+113 OPR 0, 21
+114 OPR 0, 0
