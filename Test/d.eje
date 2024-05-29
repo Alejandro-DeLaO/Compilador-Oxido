@@ -1,80 +1,92 @@
 MAX,C,E,0,0,#,
-vec,V,E,],0,#,
+vec,V,E,10,0,#,
 a,V,E,0,0,#,
 b,V,E,0,0,#,
 c,C,E,0,0,#,
-t,V,I,],0,#,
-p,V,I,],0,#,
+t,V,E,3,0,#,
+p,V,E,2,0,#,
 j,V,E,0,0,#,
-_principal,F,I,52,0,#,
+bPrimo,V,L,0,0,#,
+pepe,V,D,0,0,#,
+jorje,C,E,0,0,#,
+vac,C,E,1,0,#,
+_principal,F,I,57,0,#,
 _P,I,I,1,0,#,
-_E1,I,I,62,0,#,
+_E1,I,I,69,0,#,
 @
-1 LIT 10, 0
-2 LOD MAX, 0
-3 LIT 0, 0
-4 LIT 33, 0
-5 STO 0, vec
-6 LIT 1, 0
-7 LIT 1, 0
-8 STO 0, vec
-9 LIT 2, 0
-10 LIT 3, 0
-11 OPR 0, 8
-12 STO 0, vec
-13 LIT 3, 0
+1 LIT 0, 0
+2 LIT 33, 0
+3 STO 0, vec
+4 LIT 1, 0
+5 LIT 1, 0
+6 STO 0, vec
+7 LIT 2, 0
+8 LIT 3, 0
+9 OPR 0, 8
+10 STO 0, vec
+11 LIT 3, 0
+12 LIT 4, 0
+13 STO 0, vec
 14 LIT 4, 0
-15 STO 0, vec
-16 LIT 4, 0
-17 LIT 19, 0
-18 STO 0, vec
-19 LIT 5, 0
-20 LIT 88, 0
-21 STO 0, vec
-22 LIT 6, 0
-23 LIT 15, 0
-24 STO 0, vec
-25 LIT 7, 0
-26 LIT 2, 0
-27 STO 0, vec
-28 LIT 8, 0
-29 LIT 100, 0
-30 STO 0, vec
-31 LIT 9, 0
-32 LIT 10, 0
-33 STO 0, vec
-34 LIT 3, 0
-35 LIT 2, 0
-36 LIT 0, 0
-37 LIT 33, 0
-38 STO 0, t
-39 LIT 1, 0
-40 LIT 333, 0
-41 STO 0, t
-42 LIT 2, 0
-43 LIT 33, 0
-44 STO 0, t
-45 LIT 0, 0
-46 LIT 22332, 0
-47 STO 0, p
-48 LIT 1, 0
-49 LIT 233232, 0
-50 STO 0, p
-51 LIT 2, 0
-52 LIT V, 0
-53 LIT V, 0
-54 OPR 0, 16
-55 LOD a, 0
-56 LOD j, 0
-57 OPR 0, 6
-58 LIT 0, 0
-59 OPR 0, 14
-60 JMC F, _E1
-61 LIT F, 0
+15 LIT 19, 0
+16 STO 0, vec
+17 LIT 5, 0
+18 LIT 88, 0
+19 STO 0, vec
+20 LIT 6, 0
+21 LIT 15, 0
+22 STO 0, vec
+23 LIT 7, 0
+24 LIT 2, 0
+25 STO 0, vec
+26 LIT 8, 0
+27 LIT 100, 0
+28 STO 0, vec
+29 LIT 9, 0
+30 LIT 10, 0
+31 STO 0, vec
+32 LIT 0, 0
+33 LIT 33, 0
+34 STO 0, t
+35 LIT 1, 0
+36 LIT 333, 0
+37 STO 0, t
+38 LIT 2, 0
+39 LIT 33, 0
+40 STO 0, t
+41 LIT 0, 0
+42 LIT 22332, 0
+43 STO 0, p
+44 LIT 1, 0
+45 LIT 233232, 0
+46 STO 0, p
+47 LIT 2, 0
+48 STO 0, j
+49 LIT F, 0
+50 STO 0, bPrimo
+51 LIT 1.1, 0
+52 LIT 1, 0
+53 OPR 0, 2
+54 STO 0, pepe
+55 LIT , 0
+56 STO 0, vac
+57 LIT V, 0
+58 LIT V, 0
+59 OPR 0, 16
+60 STO 0, a
+61 LOD a, 0
 62 LOD j, 0
-63 LIT 1, 0
-64 OPR 0, 2
-65 LOD j, 0
-66 LOD a, 0
-67 OPR 0, 9
-68 OPR 0, 0
+63 OPR 0, 6
+64 LIT 0, 0
+65 OPR 0, 14
+66 JMC F, _E1
+67 LIT F, 0
+68 STO 0, bPrimo
+69 LOD j, 0
+70 LIT 1, 0
+71 OPR 0, 2
+72 STO 0, j
+73 LOD j, 0
+74 LOD a, 0
+75 OPR 0, 9
+76 OPR 0, 0

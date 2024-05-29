@@ -1,6 +1,6 @@
 sea MAX:entero=10;
 sea mut vec[MAX]:entero = [33, 1, -3, 4, 19, 88, 15, 2, 100, 10];
-sea (mut i, mut j, mut k, mut facto, mut num, mut temp) : (entero, entero, entero, entero, entero, entero);
+sea (mut i, mut j, mut k, mut facto, mut num, mut tmp) : (entero, entero, entero, entero, entero, entero);
 sea (mut fibo, mut fiba) : (entero, entero);
 sea mut bPrimo = verdadero;
 sea mut nom:alfabetico;

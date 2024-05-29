@@ -3,6 +3,10 @@ sea mut vec[MAX]:entero = [33, 1, -3, 4, 19, 88, 15, 2, 100, 10];
 sea (mut a, mut b, c) : (entero, entero, entero);
 sea (mut t[3], mut p[2]) = ([33,333,33],[22332,233232]);
 sea mut j: entero = 2;
+sea mut bPrimo: logico;
+sea mut pepe = 1.1 + 1; 
+sea jorje = 1;  
+sea vac[jorje]:entero;
 //afsdaafsdfasd
 fn principal() {
     a = verdadero o verdadero;

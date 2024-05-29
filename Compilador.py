@@ -570,16 +570,15 @@ class Analizador:
         else:
             self.print_error('Error de Sintaxis', 'Se esperaba IDENTIFICADOR y llego ' + self.lex, "IDENTIFICADOR")
 
+        if self.lex == "[":
+            self.dimens()
+
         if self.lex == "=":
-            self.insertar_tabla_de_valores(nombre_del_identificador, valor)
             self.insertar_tabla_simbolos(nombre_del_identificador, [clase_de_variable, tipo_de_dato, str(self.dim1), str(self.dim2)])
             self.tok, self.lex = self.tokeniza()
             self.asignar_valor(nombre_del_identificador)
             return
 
-        if self.lex == "[":
-            self.dimens()
-            
         if self.lex == ":":
             self.tok, self.lex = self.tokeniza()
             if self.lex == 'entero' : 
@@ -614,28 +613,45 @@ class Analizador:
             return
 
         if self.lex == "=":
-            self.insertar_tabla_de_valores(nombre_del_identificador, valor)
             self.insertar_tabla_simbolos(nombre_del_identificador, [clase_de_variable, tipo_de_dato, str(self.dim1), str(self.dim2)])
             self.tok, self.lex = self.tokeniza()
             self.asignar_valor(nombre_del_identificador)
             return
         self.print_error('Error de Sintaxis', 'Se esperaba ASIGNACION DE VALOR o ; y llego ' + self.lex, "ASIGNACION DE VALOR o ;")
 
-            
-
-
+        
 
     def asignar_valor(self, nombre_del_identificador):
-        
+        if nombre_del_identificador not in self.tab_sim:
+            self.print_error('Error de Semantica', 'El identificador '+ nombre_del_identificador + ' no ha sido declarado', "")
 
         #checar si es un arreglo
         if self.lex == "[":
             #nombre de la variable, profundidad, indice
             self.asignacion_dimensionada(nombre_del_identificador, 0, 0)
+
+        elif self.obtener_simbolo(nombre_del_identificador)[0] == "C":
+            if self.obtener_simbolo(nombre_del_identificador)[1] == "I":
+                if self.tok == "Ent":
+                    self.tab_sim[nombre_del_identificador][1] = "E"
+                elif self.tok == "Dec":
+                    self.tab_sim[nombre_del_identificador][1] = "D"
+                elif self.tok == "CtA":
+                    self.tab_sim[nombre_del_identificador][1] = "A"
+                elif self.tok == "CtL":
+                    self.tab_sim[nombre_del_identificador][1] = "L"
+                else:
+                    self.print_error('Error de Sintaxis', 'Se esperaba Valor y llego ' + self.lex, "Valor")
+            self.insertar_tabla_de_valores(nombre_del_identificador, self.lex)
+            self.tok, self.lex = self.tokeniza()
+        
         else:
             if self.lex not in ["(", "+", "-", "!"] and self.tok not in ['Ent', 'Dec', 'CtA', 'CtL', "Ide"]:
                 self.print_error('Error de Sintaxis', 'Se esperaba expresion y llego ' + self.lex, "expresion")
             self.expr()
+            if self.obtener_simbolo(nombre_del_identificador)[1] == "I":
+                self.tab_sim[nombre_del_identificador][1] = self.pila_de_tipos[-1]
+            self.insertar_codigo(self.contador_codigo, ["STO", "0",  nombre_del_identificador])
 
 
 
@@ -934,6 +950,9 @@ class Analizador:
             
             elif self.tok == "Ide":
                 nombre_identificador = self.lex
+                if nombre_identificador not in self.tab_sim:
+                    self.print_error('Error de Semantica', 'El identificador '+ nombre_identificador + ' no ha sido declarado', "")
+
                 self.tok, self.lex = self.tokeniza()
                 if self.lex == "(":
                     self.llamada_funcion()
@@ -1041,20 +1060,31 @@ class Analizador:
 
     def dimens(self):
         while True:
+            self.contador_dimension += 1
             self.tok, self.lex = self.tokeniza()
             if self.tok == "Ide":
-                if self.obtener_simbolo(self.lex)[1] != "E":
-                    self.print_error("Error de Semantica", "se esperaba ENTERO y llego " + self.lex, "ENTERO")
-                self.expr()
+                if self.lex not in self.tab_sim: 
+                    self.print_error('Error de Semantica', 'El identificador '+ self.lex + ' no ha sido declarado', "")
+                elif self.obtener_simbolo(self.lex)[1] != "E":
+                    self.print_error("Error de Semantica", "se esperaba CONSTANTE ENTERA y llego " + self.lex, "")
+                elif self.obtener_simbolo(self.lex)[0] != "C":
+                    self.print_error("Error de Semantica", "se esperaba CONSTANTE y llego " + self.lex, "")
+
+                if self.contador_dimension == 1: self.dim1 = self.obtener_valor(self.lex)
+                elif self.contador_dimension == 2: self.dim2 = self.obtener_valor(self.lex)
+                self.tok, self.lex = self.tokeniza()
+
+            elif self.tok == "Ent":
+                if self.contador_dimension == 1: self.dim1 = self.lex
+                elif self.contador_dimension == 2: self.dim2 = self.lex
+                self.tok, self.lex = self.tokeniza()
+                
             else:
-                self.expr()
-                if self.lex != "]":
+                self.print_error("Error de Semantica", "se esperaba CONSTANTE o ENTERO y llego " + self.lex, "")
+
+            if self.lex != "]":
                     self.print_error("Error de Sintaxis", "se esperaba ] y llego " + self.lex, "]")
             
-
-            self.contador_dimension += 1
-            if self.contador_dimension == 1: self.dim1 = self.lex
-            elif self.contador_dimension == 2: self.dim2 = self.lex
             self.tok, self.lex = self.tokeniza()
             
             if self.lex != "[": break
@@ -1071,8 +1101,12 @@ class Analizador:
                 if profundidad > 0:
                     self.insertar_codigo(self.contador_codigo, ['LIT', str(indice), '0'])
                 self.insertar_codigo(self.contador_codigo, ['LIT', str(contador_indice_arreglo), '0'])
+                if contador_indice_arreglo+1 > int(self.obtener_simbolo(nombre_identificador)[2+profundidad]):
+                    self.print_error("Error de Semantica", "se asignan mas valores de los posibles dada la dimension de la variable " + nombre_identificador, "no_highlight")
                 contador_indice_arreglo += 1
                 self.expr()
+                if self.obtener_simbolo(nombre_identificador)[1] == "I":
+                    self.tab_sim[nombre_identificador][1] = self.pila_de_tipos[-1]
                 
                 self.insertar_codigo(self.contador_codigo, ['STO', '0', nombre_identificador])
             if self.lex != ",":
