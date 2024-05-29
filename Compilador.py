@@ -1157,8 +1157,8 @@ class Analizador:
         if tipo_de_resultado_expr != "L":
             self.print_error("Error de Semantica", "Se esperaba tipo Logico en la expresion si y llego " + tipo_de_resultado_expr, "no_highlight")
 
-        self.contador_etiquetas += 1
         numero_de_etiqueta = str(self.contador_etiquetas)
+        self.contador_etiquetas += 1
         etiqueta_x = ""
         etiqueta_y = ""
         numero_de_etiqueta = "_E" + numero_de_etiqueta
@@ -1169,8 +1169,8 @@ class Analizador:
             self.block()
 
         if self.lex == "sino":
-            self.contador_etiquetas += 1
             numero_de_etiqueta = str(self.contador_etiquetas)
+            self.contador_etiquetas += 1
             numero_de_etiqueta = "_E" + numero_de_etiqueta
             etiqueta_y = numero_de_etiqueta
             self.insertar_codigo(self.contador_codigo, ["JMP", "0", etiqueta_y])
@@ -1236,7 +1236,6 @@ class Analizador:
 
         self.tok, self.lex = self.tokeniza()
         etiqueta_x = ""
-        etiqueta_y = ""
         numero_etiqueta = str(self.contador_etiquetas)
         self.contador_etiquetas += 1
         direccion1 = self.contador_codigo
@@ -1249,17 +1248,11 @@ class Analizador:
         numero_etiqueta = "_E" + numero_etiqueta
         etiqueta_x = numero_etiqueta
         self.insertar_codigo(self.contador_codigo, ["JMC", "F", etiqueta_x])
-        numero_etiqueta = str(self.contador_etiquetas)
-        self.contador_etiquetas += 1
-        numero_etiqueta = "_E" + numero_etiqueta
-        etiqueta_y = numero_etiqueta
-        self.insertar_codigo(self.contador_codigo, ["JMP", "0", etiqueta_y])
         
 
         if self.lex != "{":
             self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "{")
         
-        self.insertar_tabla_simbolos(etiqueta_y, ['I', 'I', str(self.contador_codigo), 0])
         self.block()
         self.insertar_codigo(self.contador_codigo, ["JMP", "0", str(direccion1)])
         self.insertar_tabla_simbolos(etiqueta_x, ['I', 'I', str(self.contador_codigo), 0])
