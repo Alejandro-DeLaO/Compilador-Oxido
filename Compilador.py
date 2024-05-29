@@ -631,6 +631,18 @@ class Analizador:
             self.asignacion_dimensionada(nombre_del_identificador, 0, 0)
 
         elif self.obtener_simbolo(nombre_del_identificador)[0] == "C":
+            if self.tok not in ["Ent", "Dec", "CtA", "CtL"]:
+                self.print_error('Error de Sintaxis', 'Se esperaba Valor y llego ' + self.lex, "")
+
+            if self.tok == "Ent":
+                self.pila_de_tipos.append("E")
+            elif self.tok == "Dec":
+                self.pila_de_tipos.append("D")
+            elif self.tok == "CtA":
+                self.pila_de_tipos.append("A")
+            elif self.tok == "CtL":
+                self.pila_de_tipos.append("L")
+
             if self.obtener_simbolo(nombre_del_identificador)[1] == "I":
                 if self.tok == "Ent":
                     self.tab_sim[nombre_del_identificador][1] = "E"
@@ -640,17 +652,25 @@ class Analizador:
                     self.tab_sim[nombre_del_identificador][1] = "A"
                 elif self.tok == "CtL":
                     self.tab_sim[nombre_del_identificador][1] = "L"
-                else:
-                    self.print_error('Error de Sintaxis', 'Se esperaba Valor y llego ' + self.lex, "Valor")
+
+            tipo_de_resultado_expr = self.pila_de_tipos.pop()
+            expr_en_tipos = self.obtener_simbolo(nombre_del_identificador)[1]+"="+tipo_de_resultado_expr
+            if expr_en_tipos not in self.tipos:
+                self.print_error('Error de Semantica', "Conflicto de tipos en la asignacion " + expr_en_tipos, "no_highlight")
+
             self.insertar_tabla_de_valores(nombre_del_identificador, self.lex)
+            self.insertar_codigo(self.contador_codigo, ["LIT", self.lex, "0"])
+            self.insertar_codigo(self.contador_codigo, ["STO", "0",  nombre_del_identificador])
             self.tok, self.lex = self.tokeniza()
         
         else:
-            if self.lex not in ["(", "+", "-", "!"] and self.tok not in ['Ent', 'Dec', 'CtA', 'CtL', "Ide"]:
-                self.print_error('Error de Sintaxis', 'Se esperaba expresion y llego ' + self.lex, "expresion")
             self.expr()
             if self.obtener_simbolo(nombre_del_identificador)[1] == "I":
                 self.tab_sim[nombre_del_identificador][1] = self.pila_de_tipos[-1]
+            tipo_de_resultado_expr = self.pila_de_tipos.pop()
+            expr_en_tipos = self.obtener_simbolo(nombre_del_identificador)[1]+"="+tipo_de_resultado_expr
+            if expr_en_tipos not in self.tipos:
+                self.print_error('Error de Semantica', "Conflicto de tipos en la asignacion " + expr_en_tipos, "no_highlight")
             self.insertar_codigo(self.contador_codigo, ["STO", "0",  nombre_del_identificador])
 
 
@@ -1108,12 +1128,17 @@ class Analizador:
                 if self.obtener_simbolo(nombre_identificador)[1] == "I":
                     self.tab_sim[nombre_identificador][1] = self.pila_de_tipos[-1]
                 
+                tipo_de_resultado_expr = self.pila_de_tipos.pop()
+                expr_en_tipos = self.obtener_simbolo(nombre_identificador)[1]+"="+tipo_de_resultado_expr
+                if expr_en_tipos not in self.tipos:
+                    self.print_error('Error de Semantica', "Conflicto de tipos en la asignacion " + expr_en_tipos, "no_highlight")
+
                 self.insertar_codigo(self.contador_codigo, ['STO', '0', nombre_identificador])
             if self.lex != ",":
                 break
 
         if self.lex != "]":
-            self.print_error("Error de Sintaxis", "se esperaba ] y llego " + self.lex, "]")
+            self.print_error("Error de Sintaxis", "se esperaba ] o , y llego " + self.lex, "] o ,")
 
         self.tok, self.lex = self.tokeniza()
 

@@ -1,5 +1,5 @@
 sea MAX:entero=10;
-sea mut vec[MAX]:entero = [33, 1, -3, 4, 19, 88, 15, 2, 100, 10];
+sea mut vec[MAX]:entero = [33, 1, -3, 4, 19,88, 15, 2, 100, 10];
 sea (mut a, mut b, c) : (entero, entero, entero);
 sea (mut t[3], mut p[2]) = ([33,333,33],[22332,233232]);
 sea mut j: entero = 2;
@@ -9,7 +9,7 @@ sea jorje = 1;
 sea vac[jorje]:entero;
 //afsdaafsdfasd
 fn principal() {
-    a = verdadero o verdadero;
+    bPrimo = verdadero o verdadero;
     ciclo {
       si a % j == 0 {
          bPrimo = falso;
