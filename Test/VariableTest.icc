@@ -1,0 +1,43 @@
+
+sea b = 3;
+
+
+//sea mut a[b]: entero = b;
+//sea mut a1[3]: entero = b;
+sea mut a4[3]: entero;
+sea mut a5[b]: entero;
+
+
+sea mut a2[b]: entero = [1,2,3];
+sea mut a3[3]: entero = [1,2,3];
+
+sea mut a6[b]: entero = [1,2,3];
+//sea a7[3]: entero = [1,2,3];
+sea mut v: entero = b;
+sea mut v1: entero;
+sea mut v2:entero = 7;
+sea mut v3:entero = 1+1;
+fn suma(sumando1:entero, sumando2:entero){
+
+}
+//sea mut v4 :entero = suma(1,1);
+sea c: entero;
+sea c1: entero = 7;
+//sea c2: entero = 1+1;
+//sea c3:entero = suma (1,1);
+//sea c4: entero = b;
+sea mut v5 = b;
+sea mut v6 = 7;
+sea mut v7 = 1+1;
+//sea mut v8 = suma(1,1);
+sea c5 = 7;
+//sea c6 = 1+1;
+//sea c7 = suma(1,1);
+//sea c8 = b;
+//sea c9 = [1,2,3];
+
+fn principal(){
+    a4 = [1,66,3];
+    v1 = a6[0];
+    imprimeln(a4[1]);
+}

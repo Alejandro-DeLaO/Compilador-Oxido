@@ -121,7 +121,7 @@ class Analizador:
         print("\033[1;31m"+type, message + "\x1b[0m")
         if helper == "only_message":
             pass
-        if helper == "no_highlight":
+        elif helper == "no_highlight":
             print("\033[1;31m" + "\n[" + str(self.contador_linea) + "]" + " [" + str(self.contador_columna) + "] \x1b[0m", end="")
             print(self.rows[self.contador_linea-1])
         elif helper != "":
@@ -451,6 +451,8 @@ class Analizador:
                 self.print_error('Error de Sintaxis', 'Se esperaba IDENTIFICADOR y llego ' + self.lex, "IDENTIFICADOR")
 
             if self.lex == "[":
+                if clase_de_variable == "C":
+                    self.print_error('Error de Sintaxis', 'Intento de asignar dimension a la constante ' + nombre_del_identificador, "")
                 self.dimens()
             
             nombres_de_variables.append(nombre_del_identificador)
@@ -551,6 +553,8 @@ class Analizador:
         tipo_de_dato = 'I'
         clase_de_variable = ''
         valor = ''
+        nombre_del_identificador = ''
+
         self.tok, self.lex = self.tokeniza();
         if self.lex == "(":
             self.declaracion_multivariable()
@@ -571,6 +575,8 @@ class Analizador:
             self.print_error('Error de Sintaxis', 'Se esperaba IDENTIFICADOR y llego ' + self.lex, "IDENTIFICADOR")
 
         if self.lex == "[":
+            if clase_de_variable == "C":
+                self.print_error('Error de Sintaxis', 'Intento de asignar dimension a la constante ' + nombre_del_identificador, "")
             self.dimens()
 
         if self.lex == "=":
@@ -581,6 +587,7 @@ class Analizador:
 
         if self.lex == ":":
             self.tok, self.lex = self.tokeniza()
+
             if self.lex == 'entero' : 
                 tipo_de_dato = 'E'
                 if self.dim1 == 0:
@@ -588,7 +595,7 @@ class Analizador:
             elif self.lex == 'decimal': 
                 tipo_de_dato = 'D'
                 if self.dim1 == 0:
-                    alor = '0.0'
+                    valor = '0.0'
             elif self.lex == 'logico' : 
                 tipo_de_dato = 'L'
                 if self.dim1 == 0:
@@ -607,9 +614,10 @@ class Analizador:
             self.insertar_tabla_de_valores(nombre_del_identificador, valor)
             self.insertar_tabla_simbolos(nombre_del_identificador, [clase_de_variable, tipo_de_dato, str(self.dim1), str(self.dim2)])
 
-            
-            self.insertar_codigo(self.contador_codigo, ['LIT', valor, '0'])
-            self.insertar_codigo(self.contador_codigo, ['STO', '0', nombre_del_identificador])
+            if self.dim1 == 0:
+                self.insertar_codigo(self.contador_codigo, ['LIT', valor, '0'])
+                self.insertar_codigo(self.contador_codigo, ['STO', '0', nombre_del_identificador])
+
             return
 
         if self.lex == "=":
@@ -694,9 +702,12 @@ class Analizador:
         self.tok, self.lex = self.tokeniza()
 
 
-    def cargar_variable_dimensionada(self, nombre_identificador):
+    def cargar_variable_dimensionada(self):
         self.tok, self.lex = self.tokeniza()
         self.expr()
+        tipo_resultante = self.pila_de_tipos.pop()
+        if tipo_resultante != "E":
+            self.print_error("Error de Semantica", "Conflicto de tipos en la indexacion, se esperaba entero y llego" + tipo_resultante, "no_highlight")
         if self.lex != "]":
             self.print_error('Error de Sintaxis', 'Se esperaba ] y llego '+ self.lex, "]")
         self.tok, self.lex = self.tokeniza()
@@ -743,7 +754,7 @@ class Analizador:
                 self.insertar_codigo(self.contador_codigo, ["CAL", etiqueta_x, "0"])
                 self.insertar_tabla_simbolos(etiqueta_x, ["I", "I", str(self.contador_codigo), "0"])
             elif self.lex == "[":
-                self.cargar_variable_dimensionada(nombre_identificador)
+                self.cargar_variable_dimensionada()
             self.insertar_codigo(self.contador_codigo, ["LOD", nombre_identificador, "0"])
 
         else:
@@ -977,9 +988,14 @@ class Analizador:
                 if self.lex == "(":
                     self.llamada_funcion()
                 elif self.lex == "[":
+                    if self.obtener_simbolo(nombre_identificador)[0] == "C":
+                            self.print_error('Error de Semantica', 'Intento de Indexacion a constante', "")
                     while True:
                         self.tok, self.lex = self.tokeniza()
                         self.expr()
+                        tipo_resultante = self.pila_de_tipos.pop()
+                        if tipo_resultante != "E":
+                            self.print_error('Error de Semantica', 'Conflicto de tipos en la indexacion, se esperaba entero y llego ' + tipo_resultante, "no_highlight")
                         if self.lex != "]":
                             self.print_error('Error de Sintaxis', 'se esperaba ] y llego '+ self.lex, "]")
                         self.tok, self.lex = self.tokeniza()
@@ -988,9 +1004,12 @@ class Analizador:
                     if self.lex == "=":
                         self.tok, self.lex = self.tokeniza()
                         self.asignar_valor(nombre_identificador)
-                        self.insertar_codigo(self.contador_codigo, ["STO", "0", nombre_identificador])
                 elif self.lex == "=":
+                    if self.obtener_simbolo(nombre_identificador)[0] == "C":
+                        self.print_error('Error de Semantica', 'Intento de asignacion a constante', "")
+
                     self.tok, self.lex = self.tokeniza()
+                    
                     self.asignar_valor(nombre_identificador)
                 if self.lex != ";":
                     self.print_error('Error de Sintaxis',  'Se esperaba ; y llego '+ self.lex, ";")
@@ -1184,7 +1203,9 @@ class Analizador:
 
     def bucle_para(self):
         self.tok, self.lex = self.tokeniza()
+        nombre_de_variable = ""
         if self.tok == "Ide":
+            nombre_de_variable = self.lex
             #self.insertar_tabla_simbolos(self.lex, ['V', 'I', 0, 0])
             self.tok, self.lex = self.tokeniza()
         else:  
@@ -1211,13 +1232,23 @@ class Analizador:
             return
         
         self.expr()
+        
+        tipo_resultante = self.pila_de_tipos.pop()
+        if tipo_resultante != "E":
+            self.print_error('Error de Semantica', 'se esperaba tipo Entero y llego ' + tipo_resultante, "no_highlight")
 
         if self.tok != "Ran":
             self.print_error('Error de Sintaxis', 'Se esperaba rango y llego '+ self.lex, "..")
 
         self.tok, self.lex = self.tokeniza()
-        
+        if self.lex == "=":
+            self.tok, self.lex = self.tokeniza()
+
         self.expr()
+
+        tipo_resultante = self.pila_de_tipos.pop()
+        if tipo_resultante != "E":
+            self.print_error('Error de Semantica', 'se esperaba tipo Entero y llego ' + tipo_resultante, "no_highlight")
 
         if self.lex != "{":
             self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "{")

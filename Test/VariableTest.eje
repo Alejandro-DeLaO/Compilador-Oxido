@@ -1,0 +1,88 @@
+b,C,E,0,0,#,
+a4,V,E,3,0,#,
+a5,V,E,3,0,#,
+a2,V,E,3,0,#,
+a3,V,E,3,0,#,
+a6,V,E,3,0,#,
+v,V,E,0,0,#,
+v1,V,E,0,0,#,
+v2,V,E,0,0,#,
+v3,V,E,0,0,#,
+c,C,E,0,0,#,
+c1,C,E,0,0,#,
+v5,V,E,0,0,#,
+v6,V,E,0,0,#,
+v7,V,E,0,0,#,
+c5,C,E,0,0,#,
+_principal,F,I,54,0,#,
+_P,I,I,1,0,#,
+@
+1 LIT 3, 0
+2 STO 0, b
+3 LIT 0, 0
+4 LIT 1, 0
+5 STO 0, a2
+6 LIT 1, 0
+7 LIT 2, 0
+8 STO 0, a2
+9 LIT 2, 0
+10 LIT 3, 0
+11 STO 0, a2
+12 LIT 0, 0
+13 LIT 1, 0
+14 STO 0, a3
+15 LIT 1, 0
+16 LIT 2, 0
+17 STO 0, a3
+18 LIT 2, 0
+19 LIT 3, 0
+20 STO 0, a3
+21 LIT 0, 0
+22 LIT 1, 0
+23 STO 0, a6
+24 LIT 1, 0
+25 LIT 2, 0
+26 STO 0, a6
+27 LIT 2, 0
+28 LIT 3, 0
+29 STO 0, a6
+30 LOD b, 0
+31 STO 0, v
+32 LIT 0, 0
+33 STO 0, v1
+34 LIT 7, 0
+35 STO 0, v2
+36 LIT 1, 0
+37 LIT 1, 0
+38 OPR 0, 2
+39 STO 0, v3
+40 LIT 0, 0
+41 STO 0, c
+42 LIT 7, 0
+43 STO 0, c1
+44 LOD b, 0
+45 STO 0, v5
+46 LIT 7, 0
+47 STO 0, v6
+48 LIT 1, 0
+49 LIT 1, 0
+50 OPR 0, 2
+51 STO 0, v7
+52 LIT 7, 0
+53 STO 0, c5
+54 LIT 0, 0
+55 LIT 1, 0
+56 STO 0, a4
+57 LIT 1, 0
+58 LIT 66, 0
+59 STO 0, a4
+60 LIT 2, 0
+61 LIT 3, 0
+62 STO 0, a4
+63 LIT 0, 0
+64 LOD a6, 0
+65 STO 0, v1
+66 LIT 1, 0
+67 LOD a4, 0
+68 OPR 0, 20
+69 OPR 0, 0
