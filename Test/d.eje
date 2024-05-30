@@ -1,118 +1,36 @@
-MAX,C,E,0,0,#,
-vec,V,E,10,0,#,
-a,V,E,0,0,#,
-b,V,E,0,0,#,
-c,C,E,0,0,#,
-t,V,E,3,0,#,
-p,V,E,2,0,#,
-j,V,E,0,0,#,
-bPrimo,V,L,0,0,#,
-pepe,V,D,0,0,#,
-jorje,C,E,0,0,#,
-vac,C,E,1,0,#,
-_principal,F,I,61,0,#,
+_principal,F,I,1,0,#,
 _P,I,I,1,0,#,
-_E1,I,I,73,0,#,
-_E2,I,I,90,0,#,
-_E3,I,I,99,0,#,
-_E4,I,I,98,0,#,
+i,C,E,0,0,#,
+END_E0,C,E,0,0,#,
+_E0,I,I,9,0,#,
+_E1,I,I,29,0,#,
 @
-1 LIT 10, 0
-2 STO 0, MAX
-3 LIT 0, 0
-4 LIT 33, 0
-5 STO 0, vec
-6 LIT 1, 0
-7 LIT 1, 0
-8 STO 0, vec
-9 LIT 2, 0
-10 LIT 3, 0
-11 OPR 0, 8
-12 STO 0, vec
-13 LIT 3, 0
-14 LIT 4, 0
-15 STO 0, vec
-16 LIT 4, 0
-17 LIT 19, 0
-18 STO 0, vec
-19 LIT 5, 0
-20 LIT 88, 0
-21 STO 0, vec
-22 LIT 6, 0
-23 LIT 15, 0
-24 STO 0, vec
-25 LIT 7, 0
-26 LIT 2, 0
-27 STO 0, vec
-28 LIT 8, 0
-29 LIT 100, 0
-30 STO 0, vec
-31 LIT 9, 0
-32 LIT 10, 0
-33 STO 0, vec
-34 LIT 0, 0
-35 LIT 33, 0
-36 STO 0, t
-37 LIT 1, 0
-38 LIT 333, 0
-39 STO 0, t
-40 LIT 2, 0
-41 LIT 33, 0
-42 STO 0, t
-43 LIT 0, 0
-44 LIT 22332, 0
-45 STO 0, p
-46 LIT 1, 0
-47 LIT 233232, 0
-48 STO 0, p
-49 LIT 2, 0
-50 STO 0, j
-51 LIT F, 0
-52 STO 0, bPrimo
-53 LIT 1.1, 0
-54 LIT 1, 0
-55 OPR 0, 2
-56 STO 0, pepe
-57 LIT 1, 0
-58 STO 0, jorje
-59 LIT , 0
-60 STO 0, vac
-61 LIT V, 0
-62 LIT V, 0
-63 OPR 0, 16
-64 STO 0, bPrimo
-65 LOD a, 0
-66 LOD j, 0
-67 OPR 0, 6
-68 LIT 0, 0
-69 OPR 0, 14
-70 JMC F, _E1
-71 LIT F, 0
-72 STO 0, bPrimo
-73 LOD j, 0
-74 LIT 1, 0
-75 OPR 0, 2
-76 STO 0, j
-77 LOD j, 0
-78 LOD a, 0
-79 OPR 0, 9
-80 LOD a, 0
-81 LIT 0, 0
-82 OPR 0, 14
-83 LOD a, 0
-84 LIT 1, 0
-85 OPR 0, 14
-86 OPR 0, 15
-87 JMC F, _E2
-88 LOD b, 0
-89 JMP 0, _E3
-90 LOD b, 0
-91 LIT 1, 0
-92 OPR 0, 4
-93 LOD a, 0
-94 LIT 1, 0
-95 OPR 0, 10
-96 JMC F, _E3
-97 JMP 0, _E4
-98 JMP 0, 93
-99 OPR 0, 0
+1 LIT 0, 0
+2 STO 0, i
+3 LIT 5, 0
+4 STO 0, END_E0
+5 LOD i, 0
+6 LOD END_E0, 0
+7 OPR 0, 14
+8 JMC V, _E1
+9 LOD i, 0
+10 OPR 0, 21
+11 LOD i, 0
+12 LOD END_E0, 0
+13 OPR 0, 9
+14 JMC V, 19
+15 LOD i, 0
+16 LOD END_E0, 0
+17 OPR 0, 10
+18 JMC V, 24
+19 LOD i, 0
+20 LIT 1, 0
+21 OPR 0, 2
+22 STO 0, i
+23 JMP 0, 5
+24 LOD i, 0
+25 LIT 1, 0
+26 OPR 0, 3
+27 STO 0, i
+28 JMP 0, 5
+29 OPR 0, 0

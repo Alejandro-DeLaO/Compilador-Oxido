@@ -1204,6 +1204,16 @@ class Analizador:
     def bucle_para(self):
         self.tok, self.lex = self.tokeniza()
         nombre_de_variable = ""
+        numero_de_etiqueta = self.contador_etiquetas
+        self.contador_etiquetas += 1
+        etiqueta_de_bloque = "_E" + str(numero_de_etiqueta)
+        numero_de_etiqueta_final = self.contador_etiquetas
+        self.contador_etiquetas += 1
+        etiqueta_del_final = "_E" + str(numero_de_etiqueta_final)
+        variable_final_rango = "END"+etiqueta_de_bloque
+        linea_comprobar_igualdad = 0
+        rango_incluyente = False
+
         if self.tok == "Ide":
             nombre_de_variable = self.lex
             #self.insertar_tabla_simbolos(self.lex, ['V', 'I', 0, 0])
@@ -1236,6 +1246,9 @@ class Analizador:
         tipo_resultante = self.pila_de_tipos.pop()
         if tipo_resultante != "E":
             self.print_error('Error de Semantica', 'se esperaba tipo Entero y llego ' + tipo_resultante, "no_highlight")
+        self.insertar_tabla_simbolos(nombre_de_variable, ['C', 'E', 0, 0])
+        self.insertar_codigo(self.contador_codigo, ["STO", "0", nombre_de_variable])
+
 
         if self.tok != "Ran":
             self.print_error('Error de Sintaxis', 'Se esperaba rango y llego '+ self.lex, "..")
@@ -1243,6 +1256,7 @@ class Analizador:
         self.tok, self.lex = self.tokeniza()
         if self.lex == "=":
             self.tok, self.lex = self.tokeniza()
+            rango_incluyente = True
 
         self.expr()
 
@@ -1250,10 +1264,45 @@ class Analizador:
         if tipo_resultante != "E":
             self.print_error('Error de Semantica', 'se esperaba tipo Entero y llego ' + tipo_resultante, "no_highlight")
 
+        self.insertar_tabla_simbolos(variable_final_rango, ['C', 'E', 0, 0])
+        self.insertar_codigo(self.contador_codigo, ["STO", "0", variable_final_rango])
+
+        #Comprobacion de que la variable y final del rango no sean iguales, si son iguales, saltamos la ejecucion
+        linea_comprobar_igualdad = self.contador_codigo
+        self.insertar_codigo(self.contador_codigo, ["LOD", nombre_de_variable, "0"])
+        self.insertar_codigo(self.contador_codigo, ["LOD", variable_final_rango, "0"])
+        self.insertar_codigo(self.contador_codigo, ["OPR", "0", "14"])
+        self.insertar_codigo(self.contador_codigo, ["JMC", "V", etiqueta_del_final])
+
+        self.insertar_tabla_simbolos(etiqueta_de_bloque, ["I", "I", str(self.contador_codigo), "0"])
         if self.lex != "{":
             self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "{")
         
         self.block()
+        #Comprobacion para saber si el rango aumenta
+        self.insertar_codigo(self.contador_codigo, ["LOD", nombre_de_variable, "0"])
+        self.insertar_codigo(self.contador_codigo, ["LOD", variable_final_rango, "0"])
+        self.insertar_codigo(self.contador_codigo, ["OPR", "0", "9"])
+        self.insertar_codigo(self.contador_codigo, ["JMC", "V", str(self.contador_codigo + 5)])
+        #Comprobacion para saber si el rango disminuye
+        self.insertar_codigo(self.contador_codigo, ["LOD", nombre_de_variable, "0"])
+        self.insertar_codigo(self.contador_codigo, ["LOD", variable_final_rango, "0"])
+        self.insertar_codigo(self.contador_codigo, ["OPR", "0", "10"])
+        self.insertar_codigo(self.contador_codigo, ["JMC", "V", str(self.contador_codigo + 6)])
+        #Suma 1 a la variable, para cuando el rango aumenta
+        self.insertar_codigo(self.contador_codigo, ["LOD", nombre_de_variable, "0"])
+        self.insertar_codigo(self.contador_codigo, ["LIT", "1", "0"])
+        self.insertar_codigo(self.contador_codigo, ["OPR", "0", "2"])
+        self.insertar_codigo(self.contador_codigo, ["STO", "0", nombre_de_variable])
+        self.insertar_codigo(self.contador_codigo, ["JMP", "0", str(linea_comprobar_igualdad)])
+        #Resta 1 a la variable, para cuando el rango disminuye
+        self.insertar_codigo(self.contador_codigo, ["LOD", nombre_de_variable, "0"])
+        self.insertar_codigo(self.contador_codigo, ["LIT", "1", "0"])
+        self.insertar_codigo(self.contador_codigo, ["OPR", "0", "3"])
+        self.insertar_codigo(self.contador_codigo, ["STO", "0", nombre_de_variable])
+        self.insertar_codigo(self.contador_codigo, ["JMP", "0", str(linea_comprobar_igualdad)])
+
+        self.insertar_tabla_simbolos(etiqueta_del_final, ["I", "I", str(self.contador_codigo), "0"])
 
     def bucle_ciclo_mientras(self):
         self.tok, self.lex = self.tokeniza()
