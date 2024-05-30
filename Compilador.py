@@ -1267,6 +1267,28 @@ class Analizador:
         self.insertar_tabla_simbolos(variable_final_rango, ['C', 'E', 0, 0])
         self.insertar_codigo(self.contador_codigo, ["STO", "0", variable_final_rango])
 
+        if rango_incluyente:
+            self.insertar_codigo(self.contador_codigo, ["LOD", nombre_de_variable, "0"])
+            self.insertar_codigo(self.contador_codigo, ["LOD", variable_final_rango, "0"])
+            self.insertar_codigo(self.contador_codigo, ["OPR", "0", "11"])
+            self.insertar_codigo(self.contador_codigo, ["JMC", "V", str(self.contador_codigo + 5)])
+
+            self.insertar_codigo(self.contador_codigo, ["LOD", nombre_de_variable, "0"])
+            self.insertar_codigo(self.contador_codigo, ["LOD", variable_final_rango, "0"])
+            self.insertar_codigo(self.contador_codigo, ["OPR", "0", "10"])
+            self.insertar_codigo(self.contador_codigo, ["JMC", "V", str(self.contador_codigo + 6)])
+
+            self.insertar_codigo(self.contador_codigo, ["LOD", variable_final_rango, "0"])
+            self.insertar_codigo(self.contador_codigo, ["LIT", "1", "0"])
+            self.insertar_codigo(self.contador_codigo, ["OPR", "0", "2"])
+            self.insertar_codigo(self.contador_codigo, ["STO", "0", variable_final_rango])
+            self.insertar_codigo(self.contador_codigo, ["JMP", "0", str(self.contador_codigo + 5)])
+
+            self.insertar_codigo(self.contador_codigo, ["LOD", variable_final_rango, "0"])
+            self.insertar_codigo(self.contador_codigo, ["LIT", "1", "0"])
+            self.insertar_codigo(self.contador_codigo, ["OPR", "0", "3"])
+            self.insertar_codigo(self.contador_codigo, ["STO", "0", variable_final_rango])
+
         #Comprobacion de que la variable y final del rango no sean iguales, si son iguales, saltamos la ejecucion
         linea_comprobar_igualdad = self.contador_codigo
         self.insertar_codigo(self.contador_codigo, ["LOD", nombre_de_variable, "0"])

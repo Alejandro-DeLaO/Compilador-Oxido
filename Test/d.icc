@@ -1,7 +1,7 @@
 //afsdaafsdfasd
 fn principal() {
 
-   para i en 0 .. 5{
+   para i en 0..=5{
       imprimeln!(i);
    }
 }
