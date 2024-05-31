@@ -1221,9 +1221,6 @@ class Analizador:
         numero_de_etiqueta = self.contador_etiquetas
         self.contador_etiquetas += 1
         etiqueta_de_bloque = "_E" + str(numero_de_etiqueta)
-        numero_de_etiqueta_final = self.contador_etiquetas
-        self.contador_etiquetas += 1
-        etiqueta_del_final = "_E" + str(numero_de_etiqueta_final)
         variable_final_rango = "%END"+etiqueta_de_bloque
         linea_comprobar_igualdad = 0
         rango_incluyente = False
@@ -1241,20 +1238,96 @@ class Analizador:
             self.print_error('Error de Sintaxis', 'Se esperaba en y llego '+ self.lex, "en") 
        
         if self.lex == "[":
+            nombre_del_arreglo = "%ARRAY" + etiqueta_de_bloque
+            item_counter = 0
+            nombre_del_contador = "%COUNTER"+ etiqueta_de_bloque
+            tipo_de_variable = "I"
+            
+            self.tok, self.lex = self.tokeniza()
+            if self.tok == "Ent":
+                tipo_de_variable = "E"
+            elif self.tok == "Dec":
+                tipo_de_variable = "D"
+            elif self.tok == "CtA":
+                tipo_de_variable = "A"
+            elif self.tok == "CtL":
+                tipo_de_variable = "L"
+            else: 
+                self.print_error('Error de Sintaxis', 'Se esperaba VALOR y llego '+ self.lex, "VALOR") 
+            self.insertar_tabla_simbolos(nombre_de_variable, ['C', tipo_de_variable, 0, 0])
+
             while True:
+                if self.tok in ["Ent", "Dec", "CtA", "CtL"]:
+                    if self.tok == "Ent":
+                        expr_en_tipos = tipo_de_variable+"="+"E"
+                        if expr_en_tipos not in self.tipos:
+                            self.print_error('Error de Semantica', "Conflicto de tipos en la asignacion " + expr_en_tipos, "no_highlight")
+                    elif self.tok == "Dec":
+                        expr_en_tipos = tipo_de_variable+"="+"D"
+                        if expr_en_tipos not in self.tipos:
+                            self.print_error('Error de Semantica', "Conflicto de tipos en la asignacion " + expr_en_tipos, "no_highlight")
+                    elif self.tok == "CtA":
+                        expr_en_tipos = tipo_de_variable+"="+"A"
+                        if expr_en_tipos not in self.tipos:
+                            self.print_error('Error de Semantica', "Conflicto de tipos en la asignacion " + expr_en_tipos, "no_highlight")
+                    elif self.tok == "CtL":
+                        expr_en_tipos = tipo_de_variable+"="+"L"
+                        if expr_en_tipos not in self.tipos:
+                            self.print_error('Error de Semantica', "Conflicto de tipos en la asignacion " + expr_en_tipos, "no_highlight")
+                   
+                    self.insertar_codigo(self.contador_codigo, ["LIT", str(item_counter), "0"])
+                    self.insertar_codigo(self.contador_codigo, ["LIT", self.lex, "0"])
+                    self.insertar_codigo(self.contador_codigo, ["STO", "0", nombre_del_arreglo])
+                    item_counter += 1
+                else:
+                    self.print_error('Error de Sintaxis', 'Se esperaba VALOR y llego '+ self.lex, "VALOR") 
                 self.tok, self.lex = self.tokeniza()
-                self.expr()
+
                 if self.lex != "," :
                     break
+
+                self.tok, self.lex = self.tokeniza()
+
             if self.lex != "]":
                 self.print_error('Error de Sintaxis', 'Se esperaba ] o , y llego '+ self.lex, "] o ,")
+            
+            self.insertar_tabla_simbolos(nombre_del_arreglo, ["V", tipo_de_variable, str(item_counter), "0"])
+
+            self.insertar_tabla_simbolos(nombre_del_contador, ["C", "E", "0", "0"])
+            self.insertar_codigo(self.contador_codigo, ["LIT", "0", "0"])
+            self.insertar_codigo(self.contador_codigo, ["STO", "0", nombre_del_contador])
+
+            self.insertar_tabla_simbolos(variable_final_rango, ['C', 'E', 0, 0])
+            self.insertar_codigo(self.contador_codigo, ["LIT", str(item_counter), "0"])
+            self.insertar_codigo(self.contador_codigo, ["STO", "0", variable_final_rango])
+
+            self.insertar_codigo(self.contador_codigo, ["LOD", nombre_del_contador, "0"])
+            self.insertar_codigo(self.contador_codigo, ["LOD", nombre_del_arreglo, "0"])
+            self.insertar_codigo(self.contador_codigo, ["STO", "0", nombre_de_variable])
+
+            self.insertar_tabla_simbolos(etiqueta_de_bloque, ["I", "I", str(self.contador_codigo - 3), "0"])
             self.tok, self.lex = self.tokeniza()
             if self.lex == "{":
                 self.block()
             else:
                 self.print_error('Error de Sintaxis', 'Se esperaba { y llego '+ self.lex, "{")
+
+            self.insertar_codigo(self.contador_codigo, ["LOD", nombre_del_contador, "0"])
+            self.insertar_codigo(self.contador_codigo, ["LIT", "1", "0"])
+            self.insertar_codigo(self.contador_codigo, ["OPR", "0", "2"])
+            self.insertar_codigo(self.contador_codigo, ["STO", "0", nombre_del_contador])
+
+            self.insertar_codigo(self.contador_codigo, ["LOD", nombre_del_contador, "0"])
+            self.insertar_codigo(self.contador_codigo, ["LOD", variable_final_rango, "0"])
+            self.insertar_codigo(self.contador_codigo, ["OPR", "0", "14"])
+            self.insertar_codigo(self.contador_codigo, ["JMC", "F", etiqueta_de_bloque])
+
             return
         
+        numero_de_etiqueta_final = self.contador_etiquetas
+        self.contador_etiquetas += 1
+        etiqueta_del_final = "_E" + str(numero_de_etiqueta_final)
+
         self.expr()
         
         tipo_resultante = self.pila_de_tipos.pop()
