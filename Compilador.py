@@ -630,8 +630,14 @@ class Analizador:
         
 
     def asignar_valor(self, nombre_del_identificador):
-        if nombre_del_identificador not in self.tab_sim:
+        lista_del_problema_de_la_dimensionalidad = ["[N]", "[A]"]
+        mensaje = ""
+        if (nombre_del_identificador not in self.tab_sim) and nombre_del_identificador[len(nombre_del_identificador)-3:] not in lista_del_problema_de_la_dimensionalidad:
             self.print_error('Error de Semantica', 'El identificador '+ nombre_del_identificador + ' no ha sido declarado', "")
+        
+        if nombre_del_identificador[len(nombre_del_identificador)-3:] in lista_del_problema_de_la_dimensionalidad:
+            mensaje = nombre_del_identificador[len(nombre_del_identificador)-3:]
+            nombre_del_identificador = nombre_del_identificador[0:len(nombre_del_identificador)-3]
 
         #checar si es un arreglo
         if self.lex == "[":
@@ -671,7 +677,42 @@ class Analizador:
             self.insertar_codigo(self.contador_codigo, ["STO", "0",  nombre_del_identificador])
             self.tok, self.lex = self.tokeniza()
         
+        elif mensaje == "[N]":
+            self.expr()
+            if self.obtener_simbolo(nombre_del_identificador)[1] == "I":
+                self.tab_sim[nombre_del_identificador][1] = self.pila_de_tipos[-1]
+            tipo_de_resultado_expr = self.pila_de_tipos.pop()
+            expr_en_tipos = self.obtener_simbolo(nombre_del_identificador)[1]+"="+tipo_de_resultado_expr
+            if expr_en_tipos not in self.tipos:
+                self.print_error('Error de Semantica', "Conflicto de tipos en la asignacion " + expr_en_tipos, "no_highlight")
+            self.insertar_codigo(self.contador_codigo, ["STO", "0",  nombre_del_identificador])
+        
+        elif mensaje == "[A]":
+            if self.tok != "Ide" or self.obtener_simbolo(nombre_del_identificador)[2] == "0":
+                self.print_error('Error de Sintaxis', "se esperaba arreglo o identificador dimensionado y llego " + self.lex, "")
+            if self.obtener_simbolo(self.lex)[2] != self.obtener_simbolo(nombre_del_identificador)[2]:
+                self.print_error('Error de Semantica', "intento de asignar distintas dimensiones ", "")
+            if self.obtener_simbolo(self.lex)[1] != self.obtener_simbolo(nombre_del_identificador)[1]:
+                expr_en_tipos = self.obtener_simbolo(nombre_del_identificador)[1] + "=" + self.obtener_simbolo(self.lex)[1]
+                self.print_error('Error de Semantica', "Conflicto de tipos en la asignacion " + expr_en_tipos, "")    
+            numero_de_datos = int(self.obtener_simbolo(nombre_del_identificador)[2])
+            contador = 0
+            nombre_del_segundo_arreglo = self.lex
+            while contador < numero_de_datos:
+                self.insertar_codigo(self.contador_codigo, ["LIT", str(contador), "0"])
+                self.insertar_codigo(self.contador_codigo, ["LIT", str(contador), "0"])
+                self.insertar_codigo(self.contador_codigo, ["LOD", nombre_del_segundo_arreglo, "0"])
+                self.insertar_codigo(self.contador_codigo, ["STO", "0", nombre_del_identificador])
+                contador += 1
+
+
+
+            self.tok, self.lex = self.tokeniza()
+        
         else:
+            if self.obtener_simbolo(nombre_del_identificador)[2] != "0":
+                self.print_error('Error de Semantica', "Conflicto de dimension, intento de asignar valor sin dimension a variable dimensionada ", "")
+
             self.expr()
             if self.obtener_simbolo(nombre_del_identificador)[1] == "I":
                 self.tab_sim[nombre_del_identificador][1] = self.pila_de_tipos[-1]
@@ -1017,14 +1058,16 @@ class Analizador:
                             break
                     if self.lex == "=":
                         self.tok, self.lex = self.tokeniza()
-                        self.asignar_valor(nombre_identificador)
+                        self.asignar_valor(nombre_identificador+"[N]")
                 elif self.lex == "=":
                     if self.obtener_simbolo(nombre_identificador)[0] == "C":
                         self.print_error('Error de Semantica', 'Intento de asignacion a constante', "")
-
-                    self.tok, self.lex = self.tokeniza()
-                    
-                    self.asignar_valor(nombre_identificador)
+                    if self.obtener_simbolo(nombre_identificador)[2] == "0":
+                        self.tok, self.lex = self.tokeniza()
+                        self.asignar_valor(nombre_identificador)
+                    else:
+                        self.tok, self.lex = self.tokeniza()
+                        self.asignar_valor(nombre_identificador+"[A]")
                 if self.lex != ";":
                     self.print_error('Error de Sintaxis',  'Se esperaba ; y llego '+ self.lex, ";")
                 self.tok, self.lex = self.tokeniza()

@@ -1,8 +1,10 @@
+
+sea mut a[3]: entero = [1,2,3];
 //afsdaafsdfasd
 fn principal() {
-   para i en [1,2,3,4,5]{
-      para j en 14 .. 20{
-         imprimeln!(i," + ", j, " = ", i+j);
-      }
-   }
+   a[1] = 5;
+   imprimeln!(a[0]);
+   imprimeln!(a[1]);
+   imprimeln!(a[2]);
+   imprimeln!(a[3]);
 }

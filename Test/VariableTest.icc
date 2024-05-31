@@ -37,7 +37,8 @@ sea c5 = 7;
 //sea c9 = [1,2,3];
 
 fn principal(){
-    a4 = [1,66,3];
-    v1 = a6[0];
-    imprimeln(c5);
+    a4 = [1,2];
+    imprimeln!(a4[2]);
+    imprimeln!(a4[1]);
+    imprimeln!(a4[0]);
 }
