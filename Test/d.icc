@@ -1,5 +1,10 @@
 //afsdaafsdfasd
+sea mut a = 1;
 fn principal() {
+   si (verdadero == verdadero) != (verdadero == verdadero){
+      imprimeln!(a+1+1*5+5);
+   }
+   
 
    para i en 0..=5{
       imprimeln!(i);

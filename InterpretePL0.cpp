@@ -114,8 +114,8 @@ void exec() {
     int pc = getIden( "_P" );
     if( pc >= 0 ) pc = tabsim[pc].di1;
     while ( pc >= 0 && pc <= conp ) {
-        /*cout << pc << " "
-             << prgm[pc].mnemo << " "
+        //cout << "pc=" << pc << endl;
+        /*cout << prgm[pc].mnemo << " "
              << prgm[pc].dir1 << ","
              << prgm[pc].dir2 << endl; */
         if( prgm[pc].mnemo == "OPR") {
@@ -156,11 +156,14 @@ void exec() {
             }
             else if( prgm[pc].dir1 == "0") {
                 int op = atoi( prgm[pc].dir2.c_str());
-                if( op > 1 && op < 8) {
+                if( op > 1 && op < 9) {  
                     double opd = strtod( pila.top().c_str(), 0 );
                     pila.pop();
-                    double opi = strtod( pila.top().c_str(), 0 );
-                    pila.pop();
+                    double opi;
+                    if (op != 8) {
+                       opi = strtod( pila.top().c_str(), 0 );
+                       pila.pop();
+                    }
                     double res;
                     ostringstream cnv;
                     switch( op ) {
@@ -176,7 +179,10 @@ void exec() {
                                break;
                        case 7: res = pow(opi, opd);
                                break;
+                       case 8: res = -opd;
+                               break;
                     }
+                    //cout << "res=" << res << endl;
                     cnv << setprecision(500) << res;
                     pila.push( cnv.str() );
                     //cout << pila << endl;
@@ -188,17 +194,17 @@ void exec() {
                     pila.pop();
                     bool res;
                     switch( op ) {
-                       case  9: res = opi < opd;
+                        case  9: res = opi < opd;
                                break;
-                       case 10: res = opi > opd;
+                        case 10: res = opi > opd;
                                break;
-                       case 11: res = opi <= opd;
+                        case 11: res = opi <= opd;
                                break;
-                       case 12: res = opi >= opd;
+                        case 12: res = opi >= opd;
                                break;
-                       case 13: res = opi != opd;
+                        case 13: res = opi != opd;
                                break;
-                       case 14: res = opi == opd;
+                        case 14: res = opi == opd;
                                break;
                     }
                     string rs;
@@ -206,6 +212,41 @@ void exec() {
                     else rs = "F";
                     pila.push( rs );
                     //cout << pila << endl;
+                }
+                else if (op == 15 || op == 16){
+                    bool res; 
+                    bool opd;
+                    bool opi;
+                    if (pila.top() == "V") opd = true;
+                    else if (pila.top() == "F") opd = false;
+                    pila.pop();
+                    if (pila.top() == "V") opi = true;
+                    else if (pila.top() == "F") opi = false;
+                    pila.pop();
+
+                    switch (op)
+                    {
+                    case 15: res = opi && opd;
+                            break;
+                    case 16: res = opi || opd;
+                            break;
+                    }
+                    string rs;
+                    if ( res ) rs = "V";
+                    else rs = "F";
+                    pila.push( rs );
+                }
+                else if (op == 17){
+                    bool res;
+                    bool opd;
+                    if (pila.top() == "V") opd = true;
+                    else if (pila.top() == "F") opd = false;
+                    pila.pop();
+                    res = !opd;
+                    string rs;
+                    if ( res ) rs = "V";
+                    else rs = "F";
+                    pila.push( rs );
                 }
             }
         }
@@ -266,7 +307,6 @@ void exec() {
                          tabsim[idx].cla == 'R' ) {
                     if( tabsim[idx].di1 > 0 && tabsim[idx].di2 > 0) {
                         int i, j, desp;
-                        pila.pop();
                         j = atoi( pila.top().c_str());
                         pila.pop();
                         i = atoi( pila.top().c_str() );
@@ -276,8 +316,7 @@ void exec() {
                         //cout << pila << endl;
                     }
                     else if( tabsim[idx].di1 > 0) {
-                        int i = atoi( pila.top().c_str() ); 
-                        pila.pop();
+                        int i = atoi( pila.top().c_str() ); pila.pop();
                         pila.push( tabsim[idx].apv[i + 1] );
                         //cout << pila << endl;
                     }

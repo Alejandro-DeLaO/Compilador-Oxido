@@ -71,8 +71,8 @@ class Analizador:
     'E<E' :'L', 'R<E' :'L', 'E<R' :'L', 'R<R' :'L',
     'E>=E':'L', 'R>=E':'L', 'E>=R':'L', 'R>=R':'L',
     'E<=E':'L', 'R<=E':'L', 'E<=R':'L', 'R<=R':'L',
-    'E!=E':'L', 'R!=E':'L', 'E!=R':'L', 'R!=R':'L', 'A!=A':'L',
-    'E==E':'L', 'R==E':'L', 'E==R':'L', 'R==R':'L', 'A==A':'L'
+    'E!=E':'L', 'R!=E':'L', 'E!=R':'L', 'R!=R':'L', 'A!=A':'L', 'L!=L': 'L',
+    'E==E':'L', 'R==E':'L', 'E==R':'L', 'R==R':'L', 'A==A':'L', 'L==L': 'L'
     }
     pila_de_tipos=[]
     pila_de_operadores=[]
@@ -766,8 +766,9 @@ class Analizador:
         if self.lex == "-":
             operador = self.lex
             self.tok, self.lex = self.tokeniza()
-        
-        self.termino()
+            self.operador_menos_unitario()
+        else:
+            self.termino()
         
         if operador == "-":
             operacion_expresada_en_tipos = self.pila_de_tipos.pop()
@@ -780,8 +781,9 @@ class Analizador:
 
     def operador_multiplicar(self):
         operador = ""
+        llego_a_termino = False
         while True:
-            if self.lex in ["*", "/", "%"]:
+            if self.lex in ["*", "/", "%"] and llego_a_termino:
                 operador = self.lex
                 self.tok, self.lex = self.tokeniza()
 
@@ -802,16 +804,17 @@ class Analizador:
             elif operador == "%":
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "6"])
 
-
+            if self.lex  in ["*", "/", "%"]:
+                 llego_a_termino = True
             if self.lex not in ["*", "/", "%"]:
                 break
 
     def operador_suma(self):
         operador = ""
-        bin = False
+        llego_a_termino = False
 
         while True:
-            if (self.lex == "+" or self.lex == "-") and bin:
+            if (self.lex == "+" or self.lex == "-") and llego_a_termino:
                 operador = self.lex
                 self.tok, self.lex = self.tokeniza()
             self.operador_multiplicar()
@@ -830,7 +833,7 @@ class Analizador:
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "3"])
 
             if(self.lex == "+" or self.lex == "-"):
-                bin = True
+                llego_a_termino = True
 
             if (self.lex != "+" and self.lex != "-"):
                 break
@@ -842,6 +845,8 @@ class Analizador:
             operador = self.lex
             self.tok, self.lex = self.tokeniza()
             self.operador_suma()
+            if self.lex in ["<", ">", "<=", ">=", "!=", "=="]:
+                self.print_error('Error de Sintaxis', "Los operadores relacionales no se pueden encadenar", "no_highlight")
             if operador in ["<", ">", "<=", ">=", "!=", "=="]:
                 operacion_expresada_en_tipos = self.pila_de_tipos.pop()
                 tipo_izquierda =  self.pila_de_tipos.pop()
@@ -869,7 +874,9 @@ class Analizador:
         if self.lex == "!":
             operador = self.lex
             self.tok, self.lex = self.tokeniza()
-        self.operador_relacional()
+            self.operador_not()
+        else:
+            self.operador_relacional()
 
         if operador == "!":
             operacion_expresada_en_tipos = self.pila_de_tipos.pop()
@@ -882,8 +889,9 @@ class Analizador:
 
     def operador_and(self):
         operador = ""
+        llego_a_termino = False
         while True:
-            if self.lex == "&&" or self.lex == "y":
+            if (self.lex == "&&" or self.lex == "y") and llego_a_termino:
                 operador = self.lex
                 self.tok, self.lex = self.tokeniza()
             self.operador_not()
@@ -898,14 +906,18 @@ class Analizador:
 
                 self.insertar_codigo(self.contador_codigo, ["OPR", "0", "15"])
 
+            if(self.lex == "&&" or self.lex == "y"):
+                llego_a_termino = True
+
             if self.lex != "&&" and self.lex != "y":
                 break
 
     def expr(self):
         operador = ""
+        llego_a_termino = False
         while True:
             
-            if self.lex == "||" or self.lex == "o":
+            if (self.lex == "||" or self.lex == "o") and llego_a_termino:
                 operador = self.lex
                 self.tok, self.lex = self.tokeniza()
             self.operador_and()
@@ -919,6 +931,8 @@ class Analizador:
 
                 self.insertar_codigo(self.contador_codigo, ['OPR', "0", "16"])
 
+            if(self.lex == "||" or self.lex == "o"):
+                llego_a_termino = True
             #esto es para simular el do while
             if self.lex != "||" and self.lex != "o":
                 break
@@ -1210,7 +1224,7 @@ class Analizador:
         numero_de_etiqueta_final = self.contador_etiquetas
         self.contador_etiquetas += 1
         etiqueta_del_final = "_E" + str(numero_de_etiqueta_final)
-        variable_final_rango = "END"+etiqueta_de_bloque
+        variable_final_rango = "%END"+etiqueta_de_bloque
         linea_comprobar_igualdad = 0
         rango_incluyente = False
 
