@@ -1,12 +1,10 @@
-sea MAX_:entero=10;
 
-
-sea mut vec[MAX_]:entero = [33, 1, -3, 4, 19, 88, 15, 2, 100, 10];
-sea (mut a, mut b, c) : (entero, entero, entero);
-sea (mut t[3], mut p[2]) = ([33,333,33],[22332,233232]);
-sea mut j = 2;
+sea mut a[3]: entero = [1,2,3];
 //afsdaafsdfasd
 fn principal() {
-    fasd;
-    fasd;
+   a[1] = 5;
+   imprimeln!(a[0]);
+   imprimeln!(a[1]);
+   imprimeln!(a[2]);
+   imprimeln!(a[3]);
 }
